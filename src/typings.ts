@@ -1,6 +1,6 @@
 import type {Dictionary} from 'lodash';
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-import type {Plugin} from 'markdownlint/lib/markdownlint';
+import type {LintError as BaseLintError, Plugin} from 'markdownlint/lib/markdownlint';
 import type {LogLevels} from './utils';
 
 export interface LintConfig {
@@ -21,4 +21,8 @@ export interface Logger {
     info(...args: string[]): void;
     warn(...args: string[]): void;
     error(...args: string[]): void;
+}
+
+export interface LintError extends BaseLintError {
+    level: LogLevels;
 }

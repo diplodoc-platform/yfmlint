@@ -1,11 +1,11 @@
-import type {LintError} from 'markdownlint/lib/markdownlint';
-import type {Options} from './typings';
+import type {LintError, Options} from './typings';
 
 import merge from 'lodash/merge';
 import attrs from 'markdown-it-attrs';
 
 import defaultLintConfig from './config';
 import * as rules from './rules';
+import {LogLevels, getLogLevel} from './utils';
 
 export async function yfmlint(content: string, path: string, opts: Options) {
     // @ts-ignore
@@ -30,6 +30,7 @@ export async function yfmlint(content: string, path: string, opts: Options) {
         })[path];
 
         return errors.map((error: LintError) => {
+            error.level = getLogLevel(config['log-levels'], error.ruleNames, LogLevels.WARN);
             error.toString = function () {
                 const {
                     lineNumber,

@@ -1,5 +1,4 @@
-import type {LintError} from 'markdownlint/lib/markdownlint';
-import type {LintConfig, Logger} from './typings';
+import type {LintError, Logger} from './typings';
 
 export enum LogLevels {
     INFO = 'info',
@@ -8,12 +7,11 @@ export enum LogLevels {
     DISABLED = 'disabled',
 }
 
-export function getLogLevel(opts: {
-    ruleNames: string[];
-    logLevels: Record<string, LogLevels>;
-    defaultLevel: LogLevels;
-}) {
-    const {ruleNames, logLevels, defaultLevel} = opts;
+export function getLogLevel(
+    logLevels: Record<string, LogLevels>,
+    ruleNames: string[],
+    defaultLevel: LogLevels,
+) {
     const ruleName = ruleNames.filter(
         (ruleName) => ruleName in logLevels,
     )[0] as keyof typeof logLevels;
@@ -21,18 +19,11 @@ export function getLogLevel(opts: {
     return logLevels[ruleName] || defaultLevel;
 }
 
-export function log(config: LintConfig, errors: LintError[], logger: Logger) {
-    const logLevels = config['log-levels'];
-
+export function log(errors: LintError[], logger: Logger) {
     for (const error of errors) {
         const message = String(error);
-        const logLevel = getLogLevel({
-            logLevels,
-            ruleNames: error.ruleNames,
-            defaultLevel: LogLevels.WARN,
-        });
 
-        switch (logLevel) {
+        switch (error.level) {
             case LogLevels.ERROR:
                 logger.error(message);
                 break;
