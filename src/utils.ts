@@ -1,33 +1,47 @@
-import type {Dictionary} from 'lodash';
+import type {LintError} from 'markdownlint/lib/markdownlint';
+import type {LintConfig, Logger} from './typings';
 
-import {LintError} from 'markdownlint';
-import {sep} from 'path';
-
-import {LogLevels} from '../log';
-
-export function errorToString(path: string, error: LintError, sourceMap?: Dictionary<string>) {
-    const ruleMoniker = error.ruleNames
-        ? error.ruleNames.join(sep)
-        : // @ts-expect-error bad markdownlint typings
-          error.ruleName + sep + error.ruleAlias;
-    const lineNumber = sourceMap ? sourceMap[error.lineNumber] : error.lineNumber;
-
-    return (
-        `${path}${lineNumber ? `: ${lineNumber}:` : ':'} ${ruleMoniker} ${error.ruleDescription}` +
-        (error.errorDetail ? ` [${error.errorDetail}]` : '') +
-        (error.errorContext ? ` [Context: "${error.errorContext}"]` : '')
-    );
+export enum LogLevels {
+    INFO = 'info',
+    WARN = 'warn',
+    ERROR = 'error',
+    DISABLED = 'disabled',
 }
 
 export function getLogLevel(opts: {
     ruleNames: string[];
-    logLevelsConfig: Record<string, LogLevels>;
+    logLevels: Record<string, LogLevels>;
     defaultLevel: LogLevels;
 }) {
-    const {ruleNames, logLevelsConfig, defaultLevel} = opts;
+    const {ruleNames, logLevels, defaultLevel} = opts;
     const ruleName = ruleNames.filter(
-        (ruleName) => ruleName in logLevelsConfig,
-    )[0] as keyof typeof logLevelsConfig;
+        (ruleName) => ruleName in logLevels,
+    )[0] as keyof typeof logLevels;
 
-    return logLevelsConfig[ruleName] || defaultLevel;
+    return logLevels[ruleName] || defaultLevel;
+}
+
+export function log(config: LintConfig, errors: LintError[], logger: Logger) {
+    const logLevels = config['log-levels'];
+
+    for (const error of errors) {
+        const message = String(error);
+        const logLevel = getLogLevel({
+            logLevels,
+            ruleNames: error.ruleNames,
+            defaultLevel: LogLevels.WARN,
+        });
+
+        switch (logLevel) {
+            case LogLevels.ERROR:
+                logger.error(message);
+                break;
+            case LogLevels.WARN:
+                logger.warn(message);
+                break;
+            case LogLevels.DISABLED:
+            default:
+                break;
+        }
+    }
 }

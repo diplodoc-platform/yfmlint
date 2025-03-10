@@ -1,4 +1,4 @@
-import {Rule} from 'markdownlint';
+import type {Rule} from 'markdownlint/lib/markdownlint';
 
 export const yfm007: Rule = {
     names: ['YFM007', 'term-used-without-definition'],

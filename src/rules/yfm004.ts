@@ -1,10 +1,10 @@
-import {Rule} from 'markdownlint';
+import type {Rule} from 'markdownlint/lib/markdownlint';
 
-export const yfm005: Rule = {
-    names: ['YFM005', 'tab-list-not-closed'],
-    description: 'Tab list not closed',
-    tags: ['tab'],
-    function: function YFM005(params, onError) {
+export const yfm004: Rule = {
+    names: ['YFM004', 'table-not-closed'],
+    description: 'Table not closed',
+    tags: ['table'],
+    function: function YFM004(params, onError) {
         const {config} = params;
         if (!config) {
             return;
@@ -12,11 +12,11 @@ export const yfm005: Rule = {
 
         params.tokens
             .filter((token) => {
-                return token.type === 'paragraph_open';
+                return token.type === '__yfm_lint';
             })
             .forEach((table) => {
                 // @ts-expect-error bad markdownlint typings
-                if (table.attrGet('YFM005')) {
+                if (table.attrGet('YFM004')) {
                     onError({
                         lineNumber: table.lineNumber,
                         context: table.line,

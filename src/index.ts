@@ -1,89 +1,59 @@
-import {sync} from 'markdownlint';
+import type {LintError} from 'markdownlint/lib/markdownlint';
+import type {Options} from './typings';
+
 import merge from 'lodash/merge';
 import attrs from 'markdown-it-attrs';
 
-import {LogLevels, Logger} from '../log';
+import defaultLintConfig from './config';
+import * as rules from './rules';
 
-import defaultLintConfig from './yfmlint';
-import {
-    yfm001,
-    yfm002,
-    yfm003,
-    yfm004,
-    yfm005,
-    yfm006,
-    yfm007,
-    yfm008,
-    yfm009,
-} from './markdownlint-custom-rule';
-import {errorToString, getLogLevel} from './utils';
-import {Options} from './typings';
-
-const lintRules = [yfm001, yfm002, yfm003, yfm004, yfm005, yfm006, yfm007, yfm008, yfm009];
-
-export interface PluginOptions {
-    log: Logger;
-    path?: string;
-    [key: string]: unknown;
-}
-
-export interface LintConfig {
-    default?: boolean;
-    'log-levels': Record<string, LogLevels>;
-    [x: string]: unknown;
-}
-
-export default function yfmlint(content: string, opts: Options) {
-    const {plugins: customPlugins, pluginOptions, sourceMap} = opts;
-    const {path = 'input', log} = pluginOptions;
+export async function yfmlint(content: string, path: string, opts: Options) {
+    // @ts-ignore
+    const {lint} = import('markdownlint/promise');
+    const {plugins: customPlugins, pluginOptions, frontMatter = null} = opts;
 
     pluginOptions.isLintRun = true;
 
-    const {
-        LogLevels: {ERROR, WARN, DISABLED},
-    } = log;
-
-    const lintConfig = merge({}, defaultLintConfig, opts.lintConfig || {});
+    const config = merge({}, defaultLintConfig, opts.lintConfig || {});
 
     const plugins = customPlugins && [attrs, ...customPlugins];
     const preparedPlugins = plugins && plugins.map((plugin) => [plugin, pluginOptions]);
 
-    let errors;
     try {
-        errors = sync({
+        const errors = await lint({
             strings: {[path]: content},
             markdownItPlugins: preparedPlugins,
             handleRuleFailures: true,
-            frontMatter: null,
-            config: lintConfig,
-            customRules: lintRules,
+            frontMatter,
+            config,
+            customRules: Object.values(rules),
         })[path];
-    } catch {}
 
-    if (!errors) {
-        return;
-    }
+        return errors.map((error: LintError) => {
+            error.toString = function () {
+                const {
+                    lineNumber,
+                    errorDetail,
+                    errorContext,
+                    ruleNames,
+                    // @ts-expect-error bad markdownlint typings
+                    ruleName,
+                    // @ts-expect-error bad markdownlint typings
+                    ruleAlias,
+                    ruleDescription,
+                } = error;
+                const ruleMoniker = ruleNames
+                    ? ruleNames.join(' / ')
+                    : ruleName + ' / ' + ruleAlias;
 
-    const logLevelsConfig = lintConfig['log-levels'];
+                return (
+                    `${path}${lineNumber ? `: ${lineNumber}:` : ':'} ${ruleMoniker} ${ruleDescription}` +
+                    (errorDetail ? ` [${errorDetail}]` : '') +
+                    (errorContext ? ` [Context: "${errorContext}"]` : '')
+                );
+            };
 
-    for (const error of errors) {
-        const message = errorToString(path, error, sourceMap);
-        const logLevel = getLogLevel({
-            logLevelsConfig,
-            ruleNames: error.ruleNames,
-            defaultLevel: WARN,
+            return error;
         });
-
-        switch (logLevel) {
-            case ERROR:
-                log.error(message);
-                break;
-            case WARN:
-                log.warn(message);
-                break;
-            case DISABLED:
-            default:
-                break;
-        }
-    }
+    } catch {}
 }
