@@ -1,19 +1,35 @@
-import type {Dictionary} from 'lodash';
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-import type {LintError as BaseLintError, Plugin} from 'markdownlint/lib/markdownlint';
+import type {LintError as BaseLintError} from 'markdownlint/lib/markdownlint';
 import type {LogLevels} from './utils';
 
-export interface LintConfig {
+export type RawLintConfig = {
     default?: boolean;
-    'log-levels': Record<string, LogLevels>;
-    [x: string]: unknown;
-}
+} & {
+    [x: string]:
+        | LogLevels
+        | boolean
+        | ({
+              level?: LogLevels;
+          } & {
+              [x: string]: unknown;
+          });
+};
+
+export type LintConfig = {
+    default?: boolean;
+} & {
+    [x: string]:
+        | false
+        | ({
+              level: LogLevels;
+          } & {
+              [x: string]: unknown;
+          });
+};
 
 export interface Options {
-    plugins?: Function[] | Plugin;
-    pluginOptions: Record<string, unknown>;
-    lintConfig?: LintConfig;
-    sourceMap?: Dictionary<string>;
+    plugins?: Function[];
+    pluginOptions?: Record<string, unknown>;
+    lintConfig?: RawLintConfig;
     frontMatter?: RegExp | null;
 }
 

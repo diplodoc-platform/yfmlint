@@ -1,0 +1,18 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`YFM009 > accepts includes 1`] = `[]`;
+
+exports[`YFM009 > accepts includes with text before 1`] = `[]`;
+
+exports[`YFM009 > not accepts includes with text after 1`] = `
+[
+  "test2.md: 7: YFM009 / no-term-definition-in-content Term definition should be placed at the end of file [There is a content between term definition. All term defitions should be placed at the end of file.]",
+  "test2.md: 7: YFM009 / no-term-definition-in-content Term definition should be placed at the end of file [The file must end with term only.]",
+]
+`;
+
+exports[`YFM009 > not accepts text between terms 1`] = `
+[
+  "test1.md: 3: YFM009 / no-term-definition-in-content Term definition should be placed at the end of file [There is a content between term definition. All term defitions should be placed at the end of file.]",
+]
+`;

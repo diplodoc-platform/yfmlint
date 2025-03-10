@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`YFM004 > Table with close token 1`] = `[]`;
+
+exports[`YFM004 > Table without close token 1`] = `
+[
+  "test1.md: 1: YFM004 / table-not-closed Table not closed [Context: "#|"]",
+]
+`;

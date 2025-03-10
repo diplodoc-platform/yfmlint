@@ -1,60 +1,65 @@
 import type {LintError, Options} from './typings';
 
-import merge from 'lodash/merge';
 import attrs from 'markdown-it-attrs';
 
 import defaultLintConfig from './config';
 import * as rules from './rules';
-import {LogLevels, getLogLevel} from './utils';
+import {getLogLevel, normalizeConfig} from './utils';
 
-export async function yfmlint(content: string, path: string, opts: Options) {
+export {LogLevels, log} from './utils';
+
+export async function yfmlint(
+    content: string,
+    path: string,
+    opts: Options,
+): Promise<LintError[] | undefined> {
     // @ts-ignore
-    const {lint} = import('markdownlint/promise');
-    const {plugins: customPlugins, pluginOptions, frontMatter = null} = opts;
+    const {lint} = await import('markdownlint/promise');
+    const {
+        plugins: customPlugins = [],
+        pluginOptions = {},
+        frontMatter = null,
+        lintConfig = {},
+    } = opts;
 
     pluginOptions.isLintRun = true;
 
-    const config = merge({}, defaultLintConfig, opts.lintConfig || {});
-
-    const plugins = customPlugins && [attrs, ...customPlugins];
+    const config = normalizeConfig(defaultLintConfig, lintConfig);
+    const plugins = customPlugins && customPlugins.length && [attrs, ...customPlugins];
     const preparedPlugins = plugins && plugins.map((plugin) => [plugin, pluginOptions]);
 
-    try {
-        const errors = await lint({
-            strings: {[path]: content},
-            markdownItPlugins: preparedPlugins,
-            handleRuleFailures: true,
-            frontMatter,
-            config,
-            customRules: Object.values(rules),
-        })[path];
+    const errors = await lint({
+        strings: {[path]: content},
+        markdownItPlugins: preparedPlugins,
+        handleRuleFailures: true,
+        frontMatter,
+        config,
+        customRules: Object.values(rules),
+    });
 
-        return errors.map((error: LintError) => {
-            error.level = getLogLevel(config['log-levels'], error.ruleNames, LogLevels.WARN);
-            error.toString = function () {
-                const {
-                    lineNumber,
-                    errorDetail,
-                    errorContext,
-                    ruleNames,
-                    // @ts-expect-error bad markdownlint typings
-                    ruleName,
-                    // @ts-expect-error bad markdownlint typings
-                    ruleAlias,
-                    ruleDescription,
-                } = error;
-                const ruleMoniker = ruleNames
-                    ? ruleNames.join(' / ')
-                    : ruleName + ' / ' + ruleAlias;
+    return errors[path].map((error: LintError) => {
+        error.level = getLogLevel(config, error.ruleNames);
+        error.toString = function () {
+            const {
+                lineNumber,
+                errorDetail,
+                errorContext,
+                ruleNames,
+                // @ts-expect-error bad markdownlint typings
+                ruleName,
+                // @ts-expect-error bad markdownlint typings
+                ruleAlias,
+                ruleDescription,
+            } = error;
+            const ruleMoniker = ruleNames ? ruleNames.join(' / ') : ruleName + ' / ' + ruleAlias;
 
-                return (
-                    `${path}${lineNumber ? `: ${lineNumber}:` : ':'} ${ruleMoniker} ${ruleDescription}` +
-                    (errorDetail ? ` [${errorDetail}]` : '') +
-                    (errorContext ? ` [Context: "${errorContext}"]` : '')
-                );
-            };
+            return (
+                `${path}${lineNumber ? `: ${lineNumber}:` : ':'} ${ruleMoniker} ${ruleDescription}` +
+                (errorDetail ? ` [${errorDetail}]` : '') +
+                (errorContext ? ` [Context: "${errorContext}"]` : '')
+            );
+        };
 
-            return error;
-        });
-    } catch {}
+        return error;
+    });
 }

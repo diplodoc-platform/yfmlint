@@ -5,8 +5,7 @@
     "outDir": "lib",
     "module": "commonjs",
     "baseUrl": ".",
-    "target": "ES2018",
-    "types": ["jest", "node"]
+    "target": "ES2018"
   },
   "include": ["src/**/*", "test/**/*"]
 }
