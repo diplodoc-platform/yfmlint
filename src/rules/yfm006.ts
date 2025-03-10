@@ -1,15 +1,17 @@
-import type {Rule} from 'markdownlint/lib/markdownlint';
+import type {Rule} from 'markdownlint';
 
 export const yfm006: Rule = {
     names: ['YFM006', 'term-definition-duplicated'],
     description: 'Term definition duplicated',
     tags: ['term'],
+    parser: 'markdownit',
     function: function YFM006(params, onError) {
         const {config} = params;
         if (!config) {
             return;
         }
-        params.tokens
+
+        params.parsers.markdownit.tokens
             .filter((token) => {
                 return token.type === '__yfm_lint';
             })

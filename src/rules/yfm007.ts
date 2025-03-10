@@ -1,15 +1,17 @@
-import type {Rule} from 'markdownlint/lib/markdownlint';
+import type {Rule} from 'markdownlint';
 
 export const yfm007: Rule = {
     names: ['YFM007', 'term-used-without-definition'],
     description: 'Term used without definition',
     tags: ['term'],
+    parser: 'markdownit',
     function: function YFM007(params, onError) {
         const {config} = params;
         if (!config) {
             return;
         }
-        params.tokens.forEach((el) =>
+
+        params.parsers.markdownit.tokens.forEach((el) =>
             el.children
                 ?.filter((token) => {
                     return token.type === '__yfm_lint';

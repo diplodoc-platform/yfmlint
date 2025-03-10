@@ -1,4 +1,4 @@
-import type {LintError as BaseLintError} from 'markdownlint/lib/markdownlint';
+import type {LintError as BaseLintError} from 'markdownlint';
 import type {LogLevels} from './utils';
 
 export type RawLintConfig = {

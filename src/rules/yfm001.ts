@@ -1,4 +1,4 @@
-import type {MarkdownItToken, Rule, RuleOnError, RuleParams} from 'markdownlint/lib/markdownlint';
+import type {MarkdownItToken, Rule, RuleOnError, RuleParams} from 'markdownlint';
 
 function addErrorDetailIf(
     onError: RuleOnError,
@@ -79,6 +79,7 @@ export const yfm001: Rule = {
     names: ['YFM001', 'inline-code-length'],
     description: 'Inline code length',
     tags: ['line_length'],
+    parser: 'markdownit',
     function: function YFM001(params, onError) {
         const {config} = params;
         const maxLength = Number(config.maximum || 100);

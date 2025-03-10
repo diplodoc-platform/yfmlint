@@ -1,16 +1,17 @@
-import type {Rule} from 'markdownlint/lib/markdownlint';
+import type {Rule} from 'markdownlint';
 
 export const yfm004: Rule = {
     names: ['YFM004', 'table-not-closed'],
     description: 'Table not closed',
     tags: ['table'],
+    parser: 'markdownit',
     function: function YFM004(params, onError) {
         const {config} = params;
         if (!config) {
             return;
         }
 
-        params.tokens
+        params.parsers.markdownit.tokens
             .filter((token) => {
                 return token.type === '__yfm_lint';
             })

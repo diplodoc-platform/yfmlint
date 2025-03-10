@@ -25,7 +25,8 @@ export async function yfmlint(
     pluginOptions.isLintRun = true;
 
     const config = normalizeConfig(defaultLintConfig, lintConfig);
-    const plugins = customPlugins && customPlugins.length && [attrs, ...customPlugins];
+    const plugins =
+        (customPlugins && customPlugins.length && [attrs, ...customPlugins]) || undefined;
     const preparedPlugins = plugins && plugins.map((plugin) => [plugin, pluginOptions]);
 
     const errors = await lint({
@@ -37,8 +38,8 @@ export async function yfmlint(
         customRules: Object.values(rules),
     });
 
-    return errors[path].map((error: LintError) => {
-        error.level = getLogLevel(config, error.ruleNames);
+    return errors[path].map((error) => {
+        (error as LintError).level = getLogLevel(config, error.ruleNames);
         error.toString = function () {
             const {
                 lineNumber,
@@ -60,6 +61,6 @@ export async function yfmlint(
             );
         };
 
-        return error;
+        return error as LintError;
     });
 }
