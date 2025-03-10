@@ -1,0 +1,13 @@
+{
+  "extends": "@diplodoc/tsconfig",
+  "compilerOptions": {
+    "lib": ["DOM", "es2018"],
+    "outDir": "lib",
+    "module": "commonjs",
+    "baseUrl": ".",
+    "declaration": true,
+    "target": "ES2018",
+    "types": ["jest"]
+  },
+  "include": ["src/**/*", "test/**/*"]
+}

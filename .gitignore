@@ -1,0 +1,14 @@
+.idea
+.DS_Store
+.vscode
+.history
+.env
+
+node_modules
+
+/lib
+/coverage
+
+/dist
+/build
+/cache
