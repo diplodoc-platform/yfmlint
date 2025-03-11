@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.0.0...v1.1.0) (2025-03-11)
+
+
+### Features
+
+* Expose normalizeConfig util ([31f0746](https://github.com/diplodoc-platform/yfmlint/commit/31f0746086859bf099a61326e69d48c8c17a43d1))
+
 ## 1.0.0 (2025-03-11)
 
 
