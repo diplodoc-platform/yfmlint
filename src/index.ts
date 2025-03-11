@@ -6,7 +6,7 @@ import defaultLintConfig from './config';
 import * as rules from './rules';
 import {getLogLevel, normalizeConfig} from './utils';
 
-export {LogLevels, log} from './utils';
+export {LogLevels, log, normalizeConfig} from './utils';
 
 export async function yfmlint(
     content: string,
