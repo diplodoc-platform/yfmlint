@@ -12,42 +12,49 @@ export enum LogLevels {
 const DEFAULT_LOG_LEVEL = LogLevels.WARN;
 
 export function normalizeConfig(...parts: RawLintConfig[]) {
+    const simplify = (config: LintConfig) => {
+        return Object.keys(config).reduce((result, key) => {
+            if ((config[key] as {level: LogLevels}).level === LogLevels.DISABLED) {
+                config[key] = false;
+            }
+
+            return result;
+        }, config);
+    };
     const normalized = parts.map((part) => {
         return Object.keys(part).reduce((result, key) => {
             if (key === 'default') {
                 result[key] = part[key];
-            } else {
-                if (typeof part[key] === 'boolean') {
-                    result[key] = part[key]
-                        ? {
-                              level: DEFAULT_LOG_LEVEL,
-                          }
-                        : false;
-                }
-
-                if (typeof part[key] === 'string') {
-                    result[key] = {
-                        level: part[key] as LogLevels,
-                    };
-                }
-
-                if (part[key] && typeof part[key] === 'object') {
-                    result[key] = {
-                        ...(part[key] as object),
-                        // @ts-ignore
-                        level: part[key].level || DEFAULT_LOG_LEVEL,
-                    };
-                }
+            } else if (typeof part[key] === 'boolean') {
+                result[key] = {
+                    level: part[key] ? DEFAULT_LOG_LEVEL : LogLevels.DISABLED,
+                };
+            } else if (part[key] === LogLevels.DISABLED) {
+                result[key] = {
+                    level: LogLevels.DISABLED,
+                };
+            } else if (typeof part[key] === 'string') {
+                result[key] = {
+                    level: part[key] as LogLevels,
+                };
+            } else if (part[key] && typeof part[key] === 'object') {
+                result[key] = {
+                    ...(part[key] as object),
+                    // @ts-ignore
+                    level: part[key].level || DEFAULT_LOG_LEVEL,
+                };
             }
 
             return result;
         }, {} as LintConfig);
     });
 
-    return merge({}, ...normalized);
+    const merged = merge({}, ...normalized);
+
+    return simplify(merged);
 }
 
-export function getLogLevel(logLevels: LintConfig, ruleNames: string[]) {
+export function getLogLevel(logLevels: LintConfig, ruleNames: string[]): LogLevels {
     return (
         ruleNames.map((ruleName) => {
             if (!logLevels[ruleName]) {
