@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.1.0...v1.2.0) (2025-03-13)
+
+
+### Features
+
+* Expose getLogLevel helper ([0b0c4c3](https://github.com/diplodoc-platform/yfmlint/commit/0b0c4c30b7ff842b4125410519f4811c1101d83a))
+
 ## [1.1.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.0.0...v1.1.0) (2025-03-11)
 
 
