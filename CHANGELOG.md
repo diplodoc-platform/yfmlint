@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/diplodoc-platform/yfmlint/compare/v1.2.0...v1.2.1) (2025-03-16)
+
+
+### Bug Fixes
+
+* Change level to loglevel ([419f512](https://github.com/diplodoc-platform/yfmlint/commit/419f512f34502daaaed9810e11e9d6ad6a0b5f15))
+
 ## [1.2.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.1.0...v1.2.0) (2025-03-13)
 
 
