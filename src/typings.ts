@@ -4,26 +4,19 @@ import type {LogLevels} from './utils';
 export type RawLintConfig = {
     default?: boolean;
 } & {
-    [x: string]:
-        | LogLevels
-        | boolean
-        | ({
-              level?: LogLevels;
-          } & {
-              [x: string]: unknown;
-          });
+    [x: string]: LogLevels | boolean | Partial<RuleConfig>;
+};
+
+export type RuleConfig = {
+    loglevel: LogLevels;
+} & {
+    [x: string]: unknown;
 };
 
 export type LintConfig = {
     default?: boolean;
 } & {
-    [x: string]:
-        | false
-        | ({
-              level: LogLevels;
-          } & {
-              [x: string]: unknown;
-          });
+    [x: string]: false | RuleConfig;
 };
 
 export interface Options {

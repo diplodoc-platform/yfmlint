@@ -1,4 +1,4 @@
-import type {LintConfig, LintError, Logger, RawLintConfig} from './typings';
+import type {LintConfig, LintError, Logger, RawLintConfig, RuleConfig} from './typings';
 
 import merge from 'lodash/merge';
 
@@ -14,7 +14,7 @@ const DEFAULT_LOG_LEVEL = LogLevels.WARN;
 export function normalizeConfig(...parts: RawLintConfig[]) {
     const simplify = (config: LintConfig) => {
         return Object.keys(config).reduce((result, key) => {
-            if ((config[key] as {level: LogLevels}).level === LogLevels.DISABLED) {
+            if ((config[key] as {loglevel: LogLevels}).loglevel === LogLevels.DISABLED) {
                 config[key] = false;
             }
 
@@ -27,21 +27,21 @@ export function normalizeConfig(...parts: RawLintConfig[]) {
                 result[key] = part[key];
             } else if (typeof part[key] === 'boolean') {
                 result[key] = {
-                    level: part[key] ? DEFAULT_LOG_LEVEL : LogLevels.DISABLED,
+                    loglevel: part[key] ? DEFAULT_LOG_LEVEL : LogLevels.DISABLED,
                 };
             } else if (part[key] === LogLevels.DISABLED) {
                 result[key] = {
-                    level: LogLevels.DISABLED,
+                    loglevel: LogLevels.DISABLED,
                 };
             } else if (typeof part[key] === 'string') {
                 result[key] = {
-                    level: part[key] as LogLevels,
+                    loglevel: part[key] as LogLevels,
                 };
             } else if (part[key] && typeof part[key] === 'object') {
                 result[key] = {
                     ...(part[key] as object),
                     // @ts-ignore
-                    level: part[key].level || DEFAULT_LOG_LEVEL,
+                    loglevel: part[key].level || DEFAULT_LOG_LEVEL,
                 };
             }
 
@@ -61,8 +61,7 @@ export function getLogLevel(logLevels: LintConfig, ruleNames: string[]): LogLeve
                 return LogLevels.DISABLED;
             }
 
-            // @ts-ignore
-            return logLevels[ruleName].level;
+            return (logLevels[ruleName] as RuleConfig).loglevel;
         })[0] || DEFAULT_LOG_LEVEL
     );
 }

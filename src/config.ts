@@ -16,5 +16,5 @@ export default {
     YFM006: LogLevels.WARN, // Term definition duplicated
     YFM007: LogLevels.WARN, // Term used without definition
     YFM008: LogLevels.WARN, // Term inside definition not allowed
-    YFM009: LogLevels.ERROR, // Term definition used not at the end of file
+    YFM009: LogLevels.WARN, // Term definition used not at the end of file
 };
