@@ -53,7 +53,7 @@
     "esbuild": "^0.19.12",
     "lodash": "^4.17.21",
     "markdown-it-attrs": "^4.3.1",
-    "markdownlint": "^0.37.4",
+    "markdownlint": "github:diplodoc-platform/markdownlint#no-parse-micromark",
     "ts-dedent": "^2.2.0",
     "typescript": "5.2.2",
     "vite": "^6.2.1",
