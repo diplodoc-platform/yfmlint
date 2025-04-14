@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/diplodoc-platform/yfmlint/compare/v1.2.1...v1.2.2) (2025-04-14)
+
+
+### Bug Fixes
+
+* Use unstable markdownlint with perf fix ([d514de6](https://github.com/diplodoc-platform/yfmlint/commit/d514de687507f066bb644e79797641d610b38058))
+
 ## [1.2.1](https://github.com/diplodoc-platform/yfmlint/compare/v1.2.0...v1.2.1) (2025-03-16)
 
 
