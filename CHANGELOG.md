@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/diplodoc-platform/yfmlint/compare/v1.2.2...v1.2.3) (2025-05-21)
+
+
+### Bug Fixes
+
+* yfm003 error -&gt; warn ([b8b280c](https://github.com/diplodoc-platform/yfmlint/commit/b8b280c7e4e2231dbd94a9cc86e8d81291c3182c))
+
 ## [1.2.2](https://github.com/diplodoc-platform/yfmlint/compare/v1.2.1...v1.2.2) (2025-04-14)
 
 
