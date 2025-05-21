@@ -10,7 +10,7 @@ export default {
         maximum: 100,
     },
     YFM002: LogLevels.WARN, // No header found in the file for the link text
-    YFM003: LogLevels.ERROR, // Link is unreachable
+    YFM003: LogLevels.WARN, // Link is unreachable
     YFM004: LogLevels.ERROR, // Table not closed
     YFM005: LogLevels.ERROR, // Tab list not closed
     YFM006: LogLevels.WARN, // Term definition duplicated
