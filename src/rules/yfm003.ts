@@ -23,9 +23,12 @@ export const yfm003: Rule = {
                     .forEach((link) => {
                         // @ts-expect-error bad markdownlint typings
                         if (link.attrGet('YFM003')) {
+                            // @ts-expect-error bad markdownlint typings
+                            const linkHrefError = `[Unreachable link: "${link.attrGet('href')}"]`;
+
                             onError({
                                 lineNumber: link.lineNumber,
-                                context: link.line,
+                                context: linkHrefError + link.line,
                             });
                         }
                     });
