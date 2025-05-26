@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.5](https://github.com/diplodoc-platform/yfmlint/compare/v1.2.4...v1.2.5) (2025-05-26)
+
+
+### Bug Fixes
+
+* Update config.ts ([c97ff47](https://github.com/diplodoc-platform/yfmlint/commit/c97ff4746a4059221a89c8b97b786fc8187e6089))
+* Update readme ([6ffc4ca](https://github.com/diplodoc-platform/yfmlint/commit/6ffc4cac8f364d9361f6c231845573d50005f093))
+
 ## [1.2.4](https://github.com/diplodoc-platform/yfmlint/compare/v1.2.3...v1.2.4) (2025-05-22)
 
 
