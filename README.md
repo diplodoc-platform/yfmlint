@@ -65,3 +65,11 @@ Tags: tab
 Aliases: tab-list-not-closed
 
 This rule is triggered when tab list don't have close token.
+
+### YFM006 - Tab list not closed
+
+Tags: term
+
+Aliases: term-definition-duplicated
+
+This rule is triggered when term definition duplicated.
