@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.6](https://github.com/diplodoc-platform/yfmlint/compare/v1.2.5...v1.2.6) (2025-06-20)
+
+
+### Bug Fixes
+
+* add autotitle anchor rule ([fef7c96](https://github.com/diplodoc-platform/yfmlint/commit/fef7c965c4bed0de2ecbf6bd1f0b8d649ffa2175))
+
 ## [1.2.5](https://github.com/diplodoc-platform/yfmlint/compare/v1.2.4...v1.2.5) (2025-05-26)
 
 
