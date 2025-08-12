@@ -17,5 +17,5 @@ export default {
     YFM007: LogLevels.WARN, // Term used without definition
     YFM008: LogLevels.WARN, // Term inside definition not allowed
     YFM009: LogLevels.WARN, // Term definition used not at the end of file
-    YFM010: LogLevels.ERROR, // Autotitle anchor is missed
+    YFM010: LogLevels.WARN, // Autotitle anchor is missed
 };
