@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.7](https://github.com/diplodoc-platform/yfmlint/compare/v1.2.6...v1.2.7) (2025-08-13)
+
+
+### Bug Fixes
+
+* build ([8407bba](https://github.com/diplodoc-platform/yfmlint/commit/8407bba2d43201d03dbadedfd1ed0c842e88f440))
+
 ## [1.2.6](https://github.com/diplodoc-platform/yfmlint/compare/v1.2.5...v1.2.6) (2025-06-20)
 
 
