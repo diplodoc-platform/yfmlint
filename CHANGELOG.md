@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.8](https://github.com/diplodoc-platform/yfmlint/compare/v1.2.7...v1.2.8) (2025-08-22)
+
+
+### Bug Fixes
+
+* YFM010 error -&gt; warn ([6791b93](https://github.com/diplodoc-platform/yfmlint/commit/6791b93facef5d7118f8436f52eef143a4768bc8))
+
 ## [1.2.7](https://github.com/diplodoc-platform/yfmlint/compare/v1.2.6...v1.2.7) (2025-08-13)
 
 
