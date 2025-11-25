@@ -6,6 +6,14 @@
 ### Bug Fixes
 
 * add rule for max inline svg size ([aea1e3a](https://github.com/diplodoc-platform/yfmlint/commit/aea1e3a97d4ae2a7fc8277d5c9eaa68ba2f4397d))
+* fix package config ([7a2e3ad](https://github.com/diplodoc-platform/yfmlint/commit/7a2e3ad66e176bdeeb981d4d86c3d1597d8add45))
+
+## [1.2.9](https://github.com/diplodoc-platform/yfmlint/compare/v1.2.8...v1.2.9) (2025-11-25)
+
+
+### Bug Fixes
+
+* add rule for max inline svg size ([aea1e3a](https://github.com/diplodoc-platform/yfmlint/commit/aea1e3a97d4ae2a7fc8277d5c9eaa68ba2f4397d))
 
 ## [1.2.8](https://github.com/diplodoc-platform/yfmlint/compare/v1.2.7...v1.2.8) (2025-08-22)
 
