@@ -18,4 +18,5 @@ export default {
     YFM008: LogLevels.WARN, // Term inside definition not allowed
     YFM009: LogLevels.WARN, // Term definition used not at the end of file
     YFM010: LogLevels.WARN, // Autotitle anchor is missed
+    YFM011: LogLevels.WARN, // Max svg size
 };
