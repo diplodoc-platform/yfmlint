@@ -1,6 +1,6 @@
 {
   "name": "@diplodoc/yfmlint",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "A simple transformer of text in YFM (Yandex Flavored Markdown) to HTML",
   "keywords": [
     "docs",
@@ -12,13 +12,13 @@
   "engines": {
     "npm": ">=11.5.1"
   },
-  "homepage": "https://github.com/diplodoc-platform/mdlint#readme",
+  "homepage": "https://github.com/diplodoc-platform/yfmlint#readme",
   "bugs": {
-    "url": "https://github.com/diplodoc-platform/mdlint/issues"
+    "url": "https://github.com/diplodoc-platform/yfmlint/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:diplodoc-platform/mdlint.git"
+    "url": "git@github.com:diplodoc-platform/yfmlint.git"
   },
   "license": "MIT",
   "author": "YFM Team <yfm-team@yandex.ru>",
