@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.1](https://github.com/diplodoc-platform/yfmlint/compare/v1.3.0...v1.3.1) (2025-11-26)
+
+
+### Bug Fixes
+
+* warning in YFM003 ([0ff43d6](https://github.com/diplodoc-platform/yfmlint/commit/0ff43d63b5a5374a79e58615a452f471606065ae))
+* warning in YFM003 ([73a0682](https://github.com/diplodoc-platform/yfmlint/commit/73a06822cf615ac64a52a666b7b3c990e3c88e9d))
+* warning in YFM003 ([5ef4da1](https://github.com/diplodoc-platform/yfmlint/commit/5ef4da1df6771043f913a7ffcea4be4255d756cc))
+
 ## [1.3.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.2.9...v1.3.0) (2025-11-25)
 
 
