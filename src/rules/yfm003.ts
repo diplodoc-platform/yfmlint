@@ -29,18 +29,18 @@ export const yfm003: Rule = {
                     })
                     .forEach((link) => {
                         const linkToken = link as unknown as TokenWithAttrs;
+                        const reason = linkToken.attrGet('YFM003');
 
-                        if (linkToken.attrGet('YFM003')) {
-                            const reason = linkToken.attrGet('YFM003_REASON');
+                        if (reason) {
                             const reasonDescription =
-                                typeof reason === 'string' ? REASON_DESCRIPTION[reason] : undefined;
+                                typeof reason === 'string' && REASON_DESCRIPTION[reason]
+                                    ? REASON_DESCRIPTION[reason]
+                                    : '';
                             const linkHrefError = `[Unreachable link: "${linkToken.attrGet('href')}"]`;
 
                             onError({
                                 lineNumber: link.lineNumber,
-                                context: `${linkHrefError}${
-                                    reasonDescription ? ` ${reasonDescription}` : ''
-                                } ${link.line}`,
+                                context: `${linkHrefError} ${reasonDescription} Line: ${link.line}`,
                             });
                         }
                     });
