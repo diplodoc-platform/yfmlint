@@ -2,9 +2,9 @@ import type {Rule} from 'markdownlint';
 import type {TokenWithAttrs} from 'src/typings';
 
 const REASON_DESCRIPTION: Record<string, string> = {
-    'file-not-found': 'File does not exist in the project.',
-    'missing-in-toc': 'File exists but is not declared in toc.',
-    'missing-in-toc-and-file-not-found': 'File does not exist and is not declared in toc.',
+    'file-not-found': 'File does not exist in the project',
+    'missing-in-toc': 'File exists but is not declared in toc',
+    'missing-in-toc-and-file-not-found': 'File does not exist and is not declared in toc',
 };
 
 export const yfm003: Rule = {
@@ -34,13 +34,20 @@ export const yfm003: Rule = {
                         if (reason) {
                             const reasonDescription =
                                 typeof reason === 'string' && REASON_DESCRIPTION[reason]
-                                    ? REASON_DESCRIPTION[reason]
+                                    ? `Reason: ${REASON_DESCRIPTION[reason]}`
                                     : '';
-                            const linkHrefError = `[Unreachable link: "${linkToken.attrGet('href')}"]`;
+
+                            const context = [
+                                `Unreachable link: "${linkToken.attrGet('href')}"`,
+                                reasonDescription,
+                                `Line: ${link.line}`,
+                            ]
+                                .filter(Boolean)
+                                .join('; ');
 
                             onError({
                                 lineNumber: link.lineNumber,
-                                context: `${linkHrefError} ${reasonDescription} Line: ${link.line}`,
+                                context,
                             });
                         }
                     });
