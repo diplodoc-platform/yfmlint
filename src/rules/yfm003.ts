@@ -1,4 +1,11 @@
 import type {Rule} from 'markdownlint';
+import type {TokenWithAttrs} from 'src/typings';
+
+const REASON_DESCRIPTION: Record<string, string> = {
+    'file-not-found': 'File does not exist in the project.',
+    'missing-in-toc': 'File exists but is not declared in toc.',
+    'missing-in-toc-and-file-not-found': 'File does not exist and is not declared in toc.',
+};
 
 export const yfm003: Rule = {
     names: ['YFM003', 'unreachable-link'],
@@ -21,14 +28,19 @@ export const yfm003: Rule = {
                         return child.type === 'link_open';
                     })
                     .forEach((link) => {
-                        // @ts-expect-error bad markdownlint typings
-                        if (link.attrGet('YFM003')) {
-                            // @ts-expect-error bad markdownlint typings
-                            const linkHrefError = `[Unreachable link: "${link.attrGet('href')}"]`;
+                        const linkToken = link as unknown as TokenWithAttrs;
+
+                        if (linkToken.attrGet('YFM003')) {
+                            const reason = linkToken.attrGet('YFM003_REASON');
+                            const reasonDescription =
+                                typeof reason === 'string' ? REASON_DESCRIPTION[reason] : undefined;
+                            const linkHrefError = `[Unreachable link: "${linkToken.attrGet('href')}"]`;
 
                             onError({
                                 lineNumber: link.lineNumber,
-                                context: linkHrefError + link.line,
+                                context: `${linkHrefError}${
+                                    reasonDescription ? ` ${reasonDescription}` : ''
+                                } ${link.line}`,
                             });
                         }
                     });
