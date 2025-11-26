@@ -1,4 +1,4 @@
-import type {LintError as BaseLintError} from 'markdownlint';
+import type {LintError as BaseLintError, MarkdownItToken} from 'markdownlint';
 import type {LogLevels} from './utils';
 
 export type RawLintConfig = {
@@ -35,3 +35,7 @@ export interface Logger {
 export interface LintError extends BaseLintError {
     level: LogLevels;
 }
+
+export type TokenWithAttrs = MarkdownItToken & {
+    attrGet(name: string): string | null;
+};
