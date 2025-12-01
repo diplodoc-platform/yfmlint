@@ -25,7 +25,7 @@ export const yfm003: Rule = {
             .forEach((inline) => {
                 inline.children
                     ?.filter((child) => {
-                        return child.type === 'link_open';
+                        return child && child.type === 'link_open';
                     })
                     .forEach((link) => {
                         const linkToken = link as unknown as TokenWithAttrs;
@@ -40,13 +40,12 @@ export const yfm003: Rule = {
                             const context = [
                                 `Unreachable link: "${linkToken.attrGet('href')}"`,
                                 reasonDescription,
-                                `Line: ${link.line}`,
+                                `Line: ${link.line || inline.line}`,
                             ]
                                 .filter(Boolean)
                                 .join('; ');
-
                             onError({
-                                lineNumber: link.lineNumber,
+                                lineNumber: link.lineNumber || inline.lineNumber,
                                 context,
                             });
                         }
