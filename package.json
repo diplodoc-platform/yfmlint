@@ -1,6 +1,6 @@
 {
   "name": "@diplodoc/yfmlint",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "A simple transformer of text in YFM (Yandex Flavored Markdown) to HTML",
   "keywords": [
     "docs",
