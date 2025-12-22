@@ -66,7 +66,7 @@ Aliases: tab-list-not-closed
 
 This rule is triggered when tab list don't have close token.
 
-### YFM006 - Tab list not closed
+### YFM006 - Term definition duplicated
 
 Tags: term
 
