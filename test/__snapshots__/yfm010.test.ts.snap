@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`YFM010 > Rule does not crash without plugins 1`] = `[]`;
+
+exports[`YFM010 > Rule is disabled 1`] = `[]`;

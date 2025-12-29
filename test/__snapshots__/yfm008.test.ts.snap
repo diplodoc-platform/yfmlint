@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`YFM008 > Term definition without nested term 1`] = `[]`;
+
+exports[`YFM008 > Term inside definition not allowed 1`] = `[]`;

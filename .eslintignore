@@ -15,6 +15,5 @@ node_modules
 .eslintrc.js
 .prettierrc.js
 .stylelintrc.js
-test/
 scripts/
 esbuild/**/*.mjs

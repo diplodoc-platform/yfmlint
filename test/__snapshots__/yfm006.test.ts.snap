@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`YFM006 > Duplicated term definition 1`] = `[]`;
+
+exports[`YFM006 > Unique term definitions 1`] = `[]`;
