@@ -13,6 +13,7 @@ node_modules
 /external
 test/
 scripts/
+esbuild/
 .lintstagedrc.js
 .eslintrc.js
 .prettierrc.js
