@@ -9,14 +9,12 @@ node_modules
 
 /dist
 /build
-build/
-build/**
 /cache
 /external
-test/
-scripts/
-esbuild/
 .lintstagedrc.js
 .eslintrc.js
 .prettierrc.js
 .stylelintrc.js
+test/
+scripts/
+esbuild/**/*.mjs
