@@ -1,4 +1,4 @@
-import type {LintError, Options} from './typings';
+import type {BaseLintError, LintError, MarkdownItPlugin, Options} from './typings';
 
 import attrs from 'markdown-it-attrs';
 
@@ -15,8 +15,18 @@ export async function yfmlint(
     path: string,
     opts: Options,
 ): Promise<LintError[] | undefined> {
-    // @ts-ignore
-    const {lint} = await import('markdownlint/promise');
+    // Dynamic import is needed because markdownlint/promise is ESM
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const {lint} = (await import('markdownlint/promise')) as {
+        lint: (options: {
+            strings: Record<string, string>;
+            markdownItPlugins?: Array<[MarkdownItPlugin, Record<string, unknown>]>;
+            handleRuleFailures?: boolean;
+            frontMatter?: RegExp | null;
+            config?: unknown;
+            customRules?: unknown[];
+        }) => Promise<Record<string, BaseLintError[]>>;
+    };
     const {
         plugins: customPlugins = [],
         pluginOptions = {},
@@ -36,7 +46,11 @@ export async function yfmlint(
         (customPlugins && customPlugins.length && [attrs, ...customPlugins]) || undefined;
     // markdownlint expects plugins in format: [plugin, options]
     // This allows passing pluginOptions to all plugins
-    const preparedPlugins = plugins && plugins.map((plugin) => [plugin, pluginOptions]);
+    const preparedPlugins: Array<[MarkdownItPlugin, Record<string, unknown>]> | undefined =
+        plugins &&
+        plugins.map(
+            (plugin) => [plugin, pluginOptions] as [MarkdownItPlugin, Record<string, unknown>],
+        );
 
     const errors = await lint({
         strings: {[path]: content},

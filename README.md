@@ -2,74 +2,220 @@
 
 # YFM syntax linter
 
-## Usage
+YFM (Yandex Flavored Markdown) syntax linter with custom rules for Diplodoc platform. Extends [markdownlint](https://github.com/DavidAnson/markdownlint) with YFM-specific validation rules.
 
-```
+## Features
+
+- **11 custom YFM rules** (YFM001-YFM011) for validating YFM-specific syntax
+- **Integration with markdownlint** - all standard markdownlint rules are available
+- **Plugin support** - integrates with plugins from `@diplodoc/transform` (e.g., `term` plugin)
+- **Configurable rule levels** - error, warn, info, or disabled
+- **Source map support** - accurate error reporting after Liquid template processing
+
+## Installation
+
+```bash
 npm install @diplodoc/yfmlint
 ```
 
+## Usage
+
+### Basic Example
+
 ```javascript
-import {yfmlint, log} from '@diplodoc/yfmlint';
+import {yfmlint, log, LogLevels} from '@diplodoc/yfmlint';
 
-const errors = await yfmlint(content, path, options);
+const content = `# Title
 
-if (errors) {
-  resourcemap(errors);
-  log(errors, logger);
+[Link to missing file](./missing.md)
+`;
+
+const errors = await yfmlint(content, 'example.md', {
+  lintConfig: {
+    YFM003: LogLevels.ERROR, // Unreachable link
+  },
+});
+
+if (errors && errors.length > 0) {
+  log(errors, console);
 }
 ```
 
-## YFM rules
+### With Plugins
 
-[All markdownlint rules](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md)
+```javascript
+import {yfmlint} from '@diplodoc/yfmlint';
+import termPlugin from '@diplodoc/transform/plugins/term';
+
+const errors = await yfmlint(content, path, {
+  plugins: [termPlugin],
+  pluginOptions: {
+    // Plugin-specific options
+  },
+  lintConfig: {
+    YFM007: true, // Term used without definition
+    YFM009: 'warn', // Term definition not at end of file
+  },
+});
+```
+
+### Configuration
+
+Rules can be configured with different log levels:
+
+```javascript
+const lintConfig = {
+  // Boolean: true = warn, false = disabled
+  YFM001: true,
+  YFM002: false,
+
+  // String: log level name
+  YFM003: 'error',
+  YFM004: 'warn',
+  YFM005: 'info',
+
+  // Object: full configuration
+  YFM001: {
+    level: 'warn',
+    maximum: 120, // Custom parameter
+  },
+};
+```
+
+## Documentation
+
+For detailed information about architecture, development, and contributing, see [AGENTS.md](./AGENTS.md).
+
+## YFM Rules
+
+This package extends markdownlint with 11 custom rules for YFM syntax validation. All standard [markdownlint rules](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md) are also available.
 
 ### YFM001 - Inline code line length
 
-Tags: line_length
+**Tags:** `line_length`  
+**Aliases:** `inline-code-length`  
+**Parameters:** `maximum` (default: 100)
 
-Aliases: inline-code-length
+Validates that inline code spans don't exceed the maximum length. Useful for preventing overly long inline code that breaks formatting.
 
-Parameters: maximum
+**Example:**
 
-This rule is triggered when there are lines that are longer than the
-configured `value` (default: 100 characters).
+```markdown
+`this is a very long inline code that exceeds the maximum length and will trigger YFM001`
+```
 
-### YFM002 - No header found in the file for the link text
+### YFM002 - No header found for link
 
-Tags: links
+**Tags:** `links`  
+**Aliases:** `no-header-found-for-link`
 
-Aliases: no-header-found-for-link
+Validates that links to headers (anchors) reference existing headers in the target file.
 
-This rule is triggered when there are no headers in the file referenced by the link.
+**Example:**
 
-### YFM003 - Link is unreachable
+```markdown
+[Link to non-existent header](./file.md#nonexistent)
+```
 
-Tags: links
+### YFM003 - Unreachable link
 
-Aliases: unreachable-link
+**Tags:** `links`  
+**Aliases:** `unreachable-link`
 
-This rule is triggered when there is no file referenced by the link.
+Validates that linked files exist and are accessible. Checks for:
+
+- File not found
+- File missing in table of contents
+- Both conditions
+
+**Example:**
+
+```markdown
+[Link to missing file](./missing.md)
+```
 
 ### YFM004 - Table not closed
 
-Tags: table
+**Tags:** `table`  
+**Aliases:** `table-not-closed`
 
-Aliases: table-not-closed
-
-This rule is triggered when table don't have close token.
+Validates that YFM tables are properly closed. Requires the `table` plugin from `@diplodoc/transform`.
 
 ### YFM005 - Tab list not closed
 
-Tags: tab
+**Tags:** `tab`  
+**Aliases:** `tab-list-not-closed`
 
-Aliases: tab-list-not-closed
+Validates that YFM tab lists are properly closed. Requires the `tabs` plugin from `@diplodoc/transform`.
 
-This rule is triggered when tab list don't have close token.
+### YFM006 - Term definition duplicated
 
-### YFM006 - Tab list not closed
+**Tags:** `term`  
+**Aliases:** `term-definition-duplicated`
 
-Tags: term
+Validates that term definitions are not duplicated. Requires the `term` plugin from `@diplodoc/transform`.
 
-Aliases: term-definition-duplicated
+**Example:**
 
-This rule is triggered when term definition duplicated.
+```markdown
+[term]: definition
+
+[term]: another definition <!-- Error: duplicate definition -->
+```
+
+### YFM007 - Term used without definition
+
+**Tags:** `term`  
+**Aliases:** `term-used-without-definition`
+
+Validates that all used terms have corresponding definitions. Requires the `term` plugin from `@diplodoc/transform`.
+
+**Example:**
+
+```markdown
+This uses [term] but no definition is provided.
+```
+
+### YFM008 - Term inside definition not allowed
+
+**Tags:** `term`  
+**Aliases:** `term-inside-definition-not-allowed`
+
+Validates that term definitions don't contain other terms. Requires the `term` plugin from `@diplodoc/transform`.
+
+### YFM009 - Term definition not at end of file
+
+**Tags:** `term`  
+**Aliases:** `no-term-definition-in-content`
+
+Validates that all term definitions are placed at the end of the file. Requires the `term` plugin from `@diplodoc/transform`.
+
+**Example:**
+
+```markdown
+[term]: definition
+
+Some content here <!-- Error: content after term definitions -->
+
+[another-term]: another definition
+```
+
+### YFM010 - Unreachable autotitle anchor
+
+**Tags:** `titles`  
+**Aliases:** `unreachable-autotitle-anchor`
+
+Validates that links to autotitle anchors reference existing titles.
+
+**Example:**
+
+```markdown
+[Link to non-existent title](#nonexistent-title)
+```
+
+### YFM011 - Max SVG size
+
+**Tags:** `image_svg`  
+**Aliases:** `max-svg-size`
+
+Validates that SVG images don't exceed the maximum size limit. Requires image processing plugins from `@diplodoc/transform`.

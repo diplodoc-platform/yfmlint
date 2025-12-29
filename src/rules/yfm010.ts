@@ -1,5 +1,7 @@
 import type {Rule} from 'markdownlint';
 
+import {findLinksInInlineTokens} from './helpers';
+
 export const yfm010: Rule = {
     names: ['YFM010', 'unreachable-autotitle-anchor'],
     description: 'Auto title anchor is unreachable',
@@ -11,30 +13,15 @@ export const yfm010: Rule = {
             return;
         }
 
-        // Find all inline tokens containing links
-        params.parsers.markdownit.tokens
-            .filter((token) => {
-                return token.type === 'inline';
-            })
-            .forEach((inline) => {
-                inline.children
-                    ?.filter((child) => {
-                        return child.type === 'link_open';
-                    })
-                    .forEach((link) => {
-                        // Plugins from @diplodoc/transform set YFM010 attribute on links
-                        // that reference autotitle anchors that don't exist
-                        // @ts-expect-error bad markdownlint typings
-                        if (link.attrGet('YFM010')) {
-                            // @ts-expect-error bad markdownlint typings
-                            const autotitleAnchorError = `[Unreachable autotitle anchor: "${link.attrGet('href')}"]`;
+        findLinksInInlineTokens(params, 'YFM010', onError, (linkToken) => {
+            // Plugins from @diplodoc/transform set YFM010 attribute on links
+            // that reference autotitle anchors that don't exist
+            const autotitleAnchorError = `[Unreachable autotitle anchor: "${linkToken.attrGet('href')}"]`;
 
-                            onError({
-                                lineNumber: link.lineNumber,
-                                context: autotitleAnchorError + link.line,
-                            });
-                        }
-                    });
+            onError({
+                lineNumber: linkToken.lineNumber,
+                context: autotitleAnchorError + ' ' + (linkToken.line || ''),
             });
+        });
     },
 };

@@ -1,5 +1,7 @@
 import type {Rule} from 'markdownlint';
 
+import {findYfmLintTokens} from './helpers';
+
 export const yfm006: Rule = {
     names: ['YFM006', 'term-definition-duplicated'],
     description: 'Term definition duplicated',
@@ -11,18 +13,6 @@ export const yfm006: Rule = {
             return;
         }
 
-        params.parsers.markdownit.tokens
-            .filter((token) => {
-                return token.type === '__yfm_lint';
-            })
-            .forEach((term) => {
-                // @ts-expect-error bad markdownlint typings
-                if (term.attrGet('YFM006')) {
-                    onError({
-                        lineNumber: term.lineNumber,
-                        context: term.line,
-                    });
-                }
-            });
+        findYfmLintTokens(params, 'YFM006', onError);
     },
 };

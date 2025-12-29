@@ -1,5 +1,7 @@
 import type {Rule} from 'markdownlint';
 
+import {findImagesInInlineTokens} from './helpers';
+
 export const yfm011: Rule = {
     names: ['YFM011', 'max-svg-size'],
     description: 'Max svg size',
@@ -11,27 +13,15 @@ export const yfm011: Rule = {
             return;
         }
 
-        params.parsers.markdownit.tokens
-            .filter((token) => {
-                return token.type === 'inline';
-            })
-            .forEach((inline) => {
-                inline.children
-                    ?.filter((child) => {
-                        return child.type === 'image';
-                    })
-                    .forEach((link) => {
-                        // @ts-expect-error bad markdownlint typings
-                        if (link.attrGet('YFM011')) {
-                            // @ts-expect-error bad markdownlint typings
-                            const svgSizeError = link.attrGet('YFM011');
+        findImagesInInlineTokens(params, 'YFM011', onError, (imageToken) => {
+            // Plugins from @diplodoc/transform set YFM011 attribute on images
+            // that exceed maximum SVG size
+            const svgSizeError = imageToken.attrGet('YFM011');
 
-                            onError({
-                                lineNumber: link.lineNumber,
-                                context: svgSizeError + ' ' + link.line,
-                            });
-                        }
-                    });
+            onError({
+                lineNumber: imageToken.lineNumber,
+                context: (svgSizeError || '') + ' ' + (imageToken.line || ''),
             });
+        });
     },
 };

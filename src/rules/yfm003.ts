@@ -1,5 +1,6 @@
 import type {Rule} from 'markdownlint';
-import type {TokenWithAttrs} from 'src/typings';
+
+import {findLinksInInlineTokens} from './helpers';
 
 const REASON_DESCRIPTION: Record<string, string> = {
     'file-not-found': 'File does not exist in the project',
@@ -18,43 +19,30 @@ export const yfm003: Rule = {
             return;
         }
 
-        // Find all inline tokens (contain links)
-        params.parsers.markdownit.tokens
-            .filter((token) => {
-                return token.type === 'inline';
-            })
-            .forEach((inline) => {
-                // Find all link_open tokens within inline content
-                inline.children
-                    ?.filter((child) => {
-                        return child && child.type === 'link_open';
-                    })
-                    .forEach((link) => {
-                        const linkToken = link as unknown as TokenWithAttrs;
-                        // Plugins from @diplodoc/transform set YFM003 attribute on links
-                        // that are unreachable (file not found, missing in TOC, etc.)
-                        // The attribute value contains the reason code
-                        const reason = linkToken.attrGet('YFM003');
+        findLinksInInlineTokens(params, 'YFM003', onError, (linkToken, inline) => {
+            // Plugins from @diplodoc/transform set YFM003 attribute on links
+            // that are unreachable (file not found, missing in TOC, etc.)
+            // The attribute value contains the reason code
+            const reason = linkToken.attrGet('YFM003');
 
-                        if (reason) {
-                            const reasonDescription =
-                                typeof reason === 'string' && REASON_DESCRIPTION[reason]
-                                    ? `Reason: ${REASON_DESCRIPTION[reason]}`
-                                    : '';
+            if (reason) {
+                const reasonDescription =
+                    typeof reason === 'string' && REASON_DESCRIPTION[reason]
+                        ? `Reason: ${REASON_DESCRIPTION[reason]}`
+                        : '';
 
-                            const context = [
-                                `Unreachable link: "${linkToken.attrGet('href')}"`,
-                                reasonDescription,
-                                `Line: ${link.line || inline.line}`,
-                            ]
-                                .filter(Boolean)
-                                .join('; ');
-                            onError({
-                                lineNumber: link.lineNumber || inline.lineNumber,
-                                context,
-                            });
-                        }
-                    });
-            });
+                const context = [
+                    `Unreachable link: "${linkToken.attrGet('href')}"`,
+                    reasonDescription,
+                    `Line: ${linkToken.lineNumber || inline.lineNumber}`,
+                ]
+                    .filter(Boolean)
+                    .join('; ');
+                onError({
+                    lineNumber: linkToken.lineNumber || inline.lineNumber,
+                    context,
+                });
+            }
+        });
     },
 };

@@ -1,5 +1,7 @@
 import type {Rule, RuleParams} from 'markdownlint';
 
+import {findYfmLintTokens} from './helpers';
+
 export const yfm008: Rule = {
     names: ['YFM008', 'term-inside-definition-not-allowed'],
     description: 'Term inside definition not allowed',
@@ -10,18 +12,7 @@ export const yfm008: Rule = {
         if (!config) {
             return;
         }
-        params.parsers.markdownit.tokens
-            .filter((token) => {
-                return token.type === '__yfm_lint';
-            })
-            .forEach((term) => {
-                // @ts-expect-error bad markdownlint typings
-                if (term.attrGet('YFM008')) {
-                    onError({
-                        lineNumber: term.lineNumber,
-                        context: term.line,
-                    });
-                }
-            });
+
+        findYfmLintTokens(params, 'YFM008', onError);
     },
 };

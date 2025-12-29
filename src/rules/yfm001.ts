@@ -15,8 +15,9 @@ function addErrorDetailIf(
     });
 }
 
-function filterTokens(params: RuleParams, type: string, handler: Function) {
-    // @ts-ignore
+type TokenHandler = (token: MarkdownItToken) => void;
+
+function filterTokens(params: RuleParams, type: string, handler: TokenHandler) {
     for (const token of params.parsers.markdownit.tokens) {
         if (token.type === type) {
             handler(token);
@@ -25,6 +26,13 @@ function filterTokens(params: RuleParams, type: string, handler: Function) {
 }
 
 const newLineRe = /\r\n?|\n/g;
+
+type InlineCodeHandler = (
+    code: string,
+    line: number,
+    column: number,
+    backtickLength: number,
+) => void;
 
 /**
  * Finds all inline code spans in markdown text and calls handler for each.
@@ -39,10 +47,10 @@ const newLineRe = /\r\n?|\n/g;
  * 5. Extract code content (between backticks) and call handler
  *
  * @param {string} input - Markdown text to parse
- * @param {Function} handler - Function called for each code span: (code, line, column, backtickLength)
+ * @param {InlineCodeHandler} handler - Function called for each code span: (code, line, column, backtickLength)
  * @returns {void}
  */
-function forEachInlineCodeSpan(input: string, handler: Function) {
+function forEachInlineCodeSpan(input: string, handler: InlineCodeHandler): void {
     const backtickRe = /`+/g;
     let match = null;
     // Find all backtick sequences: [length, index]

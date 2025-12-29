@@ -1,6 +1,13 @@
 import type {LintError as BaseLintError, MarkdownItToken} from 'markdownlint';
 import type {LogLevels} from './utils';
 
+// Re-export BaseLintError for use in index.ts
+export type {BaseLintError};
+
+// Markdown-it plugin type (simplified - markdownlint accepts plugins in [plugin, options] format)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type MarkdownItPlugin = any;
+
 export type RawLintConfig = {
     default?: boolean;
 } & {
@@ -20,7 +27,7 @@ export type LintConfig = {
 };
 
 export interface Options {
-    plugins?: Function[];
+    plugins?: MarkdownItPlugin[];
     pluginOptions?: Record<string, unknown>;
     lintConfig?: RawLintConfig;
     frontMatter?: RegExp | null;

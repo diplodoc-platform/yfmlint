@@ -43,6 +43,7 @@ This file contains instructions for AI agents working with the `@diplodoc/yfmlin
   - `utils.ts` — utility functions (LogLevels, normalizeConfig, getLogLevel, log)
   - `typings.ts` — TypeScript type definitions
   - `rules/` — custom YFM linting rules
+    - `helpers.ts` — helper functions for common rule patterns (findLinksInInlineTokens, findImagesInInlineTokens, findYfmLintTokens)
     - `yfm001.ts` — inline code line length
     - `yfm002.ts` — no header found for link
     - `yfm003.ts` — unreachable link
@@ -505,6 +506,10 @@ npm run test:watch
 7. **Standalone Compatibility**: This package must work both in metapackage and standalone modes. Always test both scenarios.
 
 8. **Used by CLI**: This package is critical for `@diplodoc/cli` build process. Breaking changes may affect documentation builds.
+
+9. **Type Safety**: The package uses strict TypeScript typing. `MarkdownItPlugin` type is used instead of `Function` for better type safety. Helper functions in `rules/helpers.ts` use proper TypeScript types (`TokenWithAttrs`, `RuleOnError`, etc.).
+
+10. **Code Reuse**: Common patterns for finding tokens are extracted into helper functions. When adding new rules, check if existing helpers can be used before duplicating code.
 
 ## Additional Resources
 

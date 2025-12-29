@@ -1,4 +1,5 @@
 import type {Rule} from 'markdownlint';
+import type {TokenWithAttrs} from '../typings';
 
 export const yfm005: Rule = {
     names: ['YFM005', 'tab-list-not-closed'],
@@ -11,16 +12,16 @@ export const yfm005: Rule = {
             return;
         }
 
+        // YFM005 uses paragraph_open tokens, not __yfm_lint tokens
+        // This is different from other rules, so we can't use findYfmLintTokens helper
         params.parsers.markdownit.tokens
-            .filter((token) => {
-                return token.type === 'paragraph_open';
-            })
-            .forEach((table) => {
-                // @ts-expect-error bad markdownlint typings
-                if (table.attrGet('YFM005')) {
+            .filter((token) => token.type === 'paragraph_open')
+            .forEach((token) => {
+                const tokenWithAttrs = token as unknown as TokenWithAttrs;
+                if (tokenWithAttrs.attrGet('YFM005')) {
                     onError({
-                        lineNumber: table.lineNumber,
-                        context: table.line,
+                        lineNumber: token.lineNumber,
+                        context: token.line,
                     });
                 }
             });
