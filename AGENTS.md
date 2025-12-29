@@ -270,6 +270,16 @@ export const yfmXXX: Rule = {
 5. Rules can access plugin-specific data via token attributes (e.g., `token.attrGet('YFM003')`)
 6. **Important**: All tokens are markdown-it tokens, not micromark tokens. Rules must use markdown-it token API.
 
+**Helper Functions**:
+
+To reduce code duplication, common patterns are extracted into helper functions in `rules/helpers.ts`:
+
+- `findLinksInInlineTokens()` — finds links in inline tokens (used by YFM002, YFM003, YFM010)
+- `findImagesInInlineTokens()` — finds images in inline tokens (used by YFM011)
+- `findYfmLintTokens()` — finds `__yfm_lint` tokens (used by YFM004, YFM005, YFM006, YFM008)
+
+Most rules now use these helpers instead of duplicating token iteration logic. Rules that need custom handling (YFM001, YFM005, YFM007, YFM009) still implement their own logic.
+
 ### Integration with Transform Plugins
 
 YFM rules work with plugins from `@diplodoc/transform`:
