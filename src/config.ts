@@ -1,7 +1,5 @@
 import {LogLevels} from './utils';
 
-console.log('YFM001');
-
 export default {
     // Default state for all rules
     default: false,
