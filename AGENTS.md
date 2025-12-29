@@ -511,6 +511,10 @@ npm run test:watch
 
 10. **Code Reuse**: Common patterns for finding tokens are extracted into helper functions. When adding new rules, check if existing helpers can be used before duplicating code.
 
+11. **Type Safety**: The package uses strict TypeScript typing. `MarkdownItPlugin` type is used instead of `Function` for better type safety. Helper functions in `rules/helpers.ts` use proper TypeScript types (`TokenWithAttrs`, `RuleOnError`, etc.).
+
+12. **Code Reuse**: Common patterns for finding tokens are extracted into helper functions. When adding new rules, check if existing helpers can be used before duplicating code.
+
 ## Additional Resources
 
 - `README.md` — main documentation
