@@ -77,5 +77,3 @@ jobs:
 
           # Create PR
           gh pr create --title "deps: Update ${{ inputs.package }} to $VERSION" --body "Automated dependency update" --base master
-
-

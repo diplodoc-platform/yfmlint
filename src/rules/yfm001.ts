@@ -26,32 +26,55 @@ function filterTokens(params: RuleParams, type: string, handler: Function) {
 
 const newLineRe = /\r\n?|\n/g;
 
+/**
+ * Finds all inline code spans in markdown text and calls handler for each.
+ *
+ * Algorithm:
+ * 1. Find all backtick sequences (`` ` ``, ``` ```, etc.) and their positions
+ * 2. Find all newline positions for line/column calculation
+ * 3. Match opening/closing backticks:
+ *    - Opening backtick must not be escaped (not preceded by \)
+ *    - Opening and closing backticks must have same length
+ * 4. Calculate line and column numbers accounting for newlines
+ * 5. Extract code content (between backticks) and call handler
+ *
+ * @param {string} input - Markdown text to parse
+ * @param {Function} handler - Function called for each code span: (code, line, column, backtickLength)
+ * @returns {void}
+ */
 function forEachInlineCodeSpan(input: string, handler: Function) {
     const backtickRe = /`+/g;
     let match = null;
+    // Find all backtick sequences: [length, index]
     const backticksLengthAndIndex = [];
     while ((match = backtickRe.exec(input)) !== null) {
         backticksLengthAndIndex.push([match[0].length, match.index]);
     }
+    // Find all newline positions for line/column calculation
     const newLinesIndex = [];
     while ((match = newLineRe.exec(input)) !== null) {
         newLinesIndex.push(match.index);
     }
     let lineIndex = 0;
     let lineStartIndex = 0;
-    let k = 0;
+    let k = 0; // Index in newLinesIndex array
+    // Match opening and closing backticks
     for (let i = 0; i < backticksLengthAndIndex.length - 1; i++) {
         const [startLength, startIndex] = backticksLengthAndIndex[i];
+        // Skip escaped backticks (preceded by backslash)
         if (!(startIndex === 0 || input[startIndex - 1] !== '\\')) {
             continue;
         }
 
+        // Find matching closing backticks
         for (let j = i + 1; j < backticksLengthAndIndex.length; j++) {
             const [endLength, endIndex] = backticksLengthAndIndex[j];
+            // Opening and closing must have same number of backticks
             if (startLength !== endLength) {
                 continue;
             }
 
+            // Calculate line number: count newlines before startIndex
             for (; k < newLinesIndex.length; k++) {
                 const newLineIndex = newLinesIndex[k];
                 if (startIndex < newLineIndex) {
@@ -61,7 +84,9 @@ function forEachInlineCodeSpan(input: string, handler: Function) {
                 lineStartIndex = newLineIndex + 1;
             }
 
+            // Calculate column: position from start of line + backtick length
             const columnIndex = startIndex - lineStartIndex + startLength;
+            // Extract code content (between backticks) and call handler
             handler(
                 input.slice(startIndex + startLength, endIndex),
                 lineIndex,
@@ -69,7 +94,7 @@ function forEachInlineCodeSpan(input: string, handler: Function) {
                 startLength,
             );
 
-            i = j;
+            i = j; // Skip to after closing backticks
             break;
         }
     }

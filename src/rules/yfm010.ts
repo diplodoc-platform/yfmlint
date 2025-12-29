@@ -11,6 +11,7 @@ export const yfm010: Rule = {
             return;
         }
 
+        // Find all inline tokens containing links
         params.parsers.markdownit.tokens
             .filter((token) => {
                 return token.type === 'inline';
@@ -21,6 +22,8 @@ export const yfm010: Rule = {
                         return child.type === 'link_open';
                     })
                     .forEach((link) => {
+                        // Plugins from @diplodoc/transform set YFM010 attribute on links
+                        // that reference autotitle anchors that don't exist
                         // @ts-expect-error bad markdownlint typings
                         if (link.attrGet('YFM010')) {
                             // @ts-expect-error bad markdownlint typings

@@ -11,6 +11,9 @@ export const yfm007: Rule = {
             return;
         }
 
+        // The term plugin from @diplodoc/transform creates __yfm_lint tokens
+        // for terms that are used without definition
+        // It sets YFM007 attribute on these tokens when isLintRun = true
         params.parsers.markdownit.tokens.forEach((el) =>
             el.children
                 ?.filter((token) => {

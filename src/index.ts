@@ -24,16 +24,25 @@ export async function yfmlint(
         lintConfig = {},
     } = opts;
 
+    // Signal to plugins that this is a lint run (not a transform run)
+    // Plugins from @diplodoc/transform use this flag to create __yfm_lint tokens
+    // and set attributes (e.g., YFM003, YFM007) for rule validation
     pluginOptions.isLintRun = true;
 
     const config = normalizeConfig(defaultLintConfig, lintConfig);
+    // Add markdown-it-attrs plugin by default to support attribute syntax in markdown
+    // Custom plugins are added after attrs plugin
     const plugins =
         (customPlugins && customPlugins.length && [attrs, ...customPlugins]) || undefined;
+    // markdownlint expects plugins in format: [plugin, options]
+    // This allows passing pluginOptions to all plugins
     const preparedPlugins = plugins && plugins.map((plugin) => [plugin, pluginOptions]);
 
     const errors = await lint({
         strings: {[path]: content},
         markdownItPlugins: preparedPlugins,
+        // Continue processing even if a rule throws an error
+        // This prevents one failing rule from stopping the entire lint process
         handleRuleFailures: true,
         frontMatter,
         config,
@@ -42,6 +51,8 @@ export async function yfmlint(
 
     return errors[path].map((error) => {
         (error as LintError).level = getLogLevel(config, error.ruleNames);
+        // Override toString() to provide custom error formatting
+        // Format: "path:line: ruleName description [detail] [Context: ...]"
         error.toString = function () {
             const {
                 lineNumber,

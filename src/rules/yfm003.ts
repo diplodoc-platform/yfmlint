@@ -18,17 +18,22 @@ export const yfm003: Rule = {
             return;
         }
 
+        // Find all inline tokens (contain links)
         params.parsers.markdownit.tokens
             .filter((token) => {
                 return token.type === 'inline';
             })
             .forEach((inline) => {
+                // Find all link_open tokens within inline content
                 inline.children
                     ?.filter((child) => {
                         return child && child.type === 'link_open';
                     })
                     .forEach((link) => {
                         const linkToken = link as unknown as TokenWithAttrs;
+                        // Plugins from @diplodoc/transform set YFM003 attribute on links
+                        // that are unreachable (file not found, missing in TOC, etc.)
+                        // The attribute value contains the reason code
                         const reason = linkToken.attrGet('YFM003');
 
                         if (reason) {
