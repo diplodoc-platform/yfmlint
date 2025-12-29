@@ -47,7 +47,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@diplodoc/lint": "^1.2.1",
+    "@diplodoc/lint": "^1.9.0",
     "@diplodoc/transform": "^4.48.4",
     "@diplodoc/tsconfig": "^1.0.2",
     "@types/lodash": "^4.17.15",

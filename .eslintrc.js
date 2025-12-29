@@ -5,4 +5,12 @@ module.exports = {
         tsconfigRootDir: __dirname,
         project: true,
     },
+    overrides: [
+        {
+            files: ['*.mjs', '*.cjs'],
+            parserOptions: {
+                project: null,
+            },
+        },
+    ],
 };

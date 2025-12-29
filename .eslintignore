@@ -11,3 +11,9 @@ node_modules
 /build
 /cache
 /external
+test/
+scripts/
+.lintstagedrc.js
+.eslintrc.js
+.prettierrc.js
+.stylelintrc.js
