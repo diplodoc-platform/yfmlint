@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.4](https://github.com/diplodoc-platform/yfmlint/compare/v1.3.3...v1.3.4) (2026-01-12)
+
+
+### Bug Fixes
+
+* configure ESLint to properly handle config files and build directory ([a015d67](https://github.com/diplodoc-platform/yfmlint/commit/a015d6757b2e8d26d0550224020562f181f8664d))
+* Fix deps ([329716c](https://github.com/diplodoc-platform/yfmlint/commit/329716ccf9061023971954c9947af84bcfe2b7b6))
+* properly configure ESLint to ignore build directory and config files ([2a6aac8](https://github.com/diplodoc-platform/yfmlint/commit/2a6aac83cb182f0cd180a5299f64e6d64b1b5525))
+* remove console.log statement ([878ba7d](https://github.com/diplodoc-platform/yfmlint/commit/878ba7d53295725d132b24992f8ee2b7b01ea62e))
+* update .eslintignore to properly exclude build directory ([7147d9b](https://github.com/diplodoc-platform/yfmlint/commit/7147d9bb64c87da5ef770534940b7441cbce4014))
+* use correct token types in YFM009 rule ([124c600](https://github.com/diplodoc-platform/yfmlint/commit/124c600c3147a5121a00ff266c2cc55ffe64cd9c))
+
 ## [1.3.3](https://github.com/diplodoc-platform/yfmlint/compare/v1.3.2...v1.3.3) (2025-12-04)
 
 
