@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.5](https://github.com/diplodoc-platform/yfmlint/compare/v1.3.4...v1.3.5) (2026-02-10)
+
+
+### Bug Fixes
+
+* Update infra to v1.13.2 ([7418bb5](https://github.com/diplodoc-platform/yfmlint/commit/7418bb55cf730519d8eb2e53b49e2f0eaa8fef32))
+
 ## [1.3.4](https://github.com/diplodoc-platform/yfmlint/compare/v1.3.3...v1.3.4) (2026-01-12)
 
 
