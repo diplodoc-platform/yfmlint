@@ -5,9 +5,11 @@ export default defineConfig({
         include: ['test/*.test.ts'],
         exclude: ['node_modules'],
         coverage: {
-            enabled: true,
+            all: true,
             provider: 'v8',
-            include: ['src'],
+            include: ['src/**'],
+            excludeAfterRemap: true,
+            reporter: ['text', 'json', 'html', 'lcov'],
         },
     },
 });

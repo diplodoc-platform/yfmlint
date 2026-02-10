@@ -1,4 +1,9 @@
 [![NPM version](https://img.shields.io/npm/v/@diplodoc/yfmlint.svg?style=flat)](https://www.npmjs.org/package/@diplodoc/yfmlint)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_yfmlint&metric=alert_status)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_yfmlint)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_yfmlint&metric=coverage)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_yfmlint)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_yfmlint&metric=sqale_rating)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_yfmlint)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_yfmlint&metric=reliability_rating)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_yfmlint)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_yfmlint&metric=security_rating)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_yfmlint)
 
 # YFM syntax linter
 
