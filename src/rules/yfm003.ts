@@ -6,6 +6,7 @@ const REASON_DESCRIPTION: Record<string, string> = {
     'file-not-found': 'File does not exist in the project',
     'missing-in-toc': 'File is not declared in toc',
     'missing-in-toc-and-file-not-found': 'File does not exist and is not declared in toc',
+    'missing-static-asset': 'Static asset file does not exist in _assets folder',
 };
 
 export const yfm003: Rule = {
