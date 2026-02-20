@@ -1,6 +1,10 @@
 import type {Rule} from 'markdownlint';
 
-import {findLinksInInlineTokens} from './helpers';
+import {
+    createContextWithFileInfo,
+    findLinksInInlineTokens,
+    validateLineNumberAndGetFilePath,
+} from './helpers';
 
 const REASON_DESCRIPTION: Record<string, string> = {
     'file-not-found': 'File does not exist in the project',
@@ -31,15 +35,24 @@ export const yfm003: Rule = {
                         ? `Reason: ${REASON_DESCRIPTION[reason]}`
                         : '';
 
-                const context = [
+                // Get the original line number from token
+                const rawLineNumber = linkToken.lineNumber || inline.lineNumber;
+                const {lineNumber, filePath} = validateLineNumberAndGetFilePath(
+                    params,
+                    rawLineNumber,
+                );
+
+                const baseContext = [
                     `Unreachable link: "${linkToken.attrGet('href')}"`,
                     reasonDescription,
-                    `Line: ${linkToken.lineNumber || inline.lineNumber}`,
+                    `Line: ${rawLineNumber}`, // Show original line number for debugging
                 ]
                     .filter(Boolean)
                     .join('; ');
+
+                const context = createContextWithFileInfo(baseContext, filePath, params.name);
                 onError({
-                    lineNumber: linkToken.lineNumber || inline.lineNumber,
+                    lineNumber,
                     context,
                 });
             }

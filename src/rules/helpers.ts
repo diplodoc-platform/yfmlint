@@ -2,6 +2,42 @@ import type {MarkdownItToken, RuleOnError, RuleParams} from 'markdownlint';
 import type {TokenWithAttrs} from '../typings';
 
 /**
+ * Validates and adjusts lineNumber to prevent markdownlint exception.
+ * When include files are used, lineNumber might exceed the original file's line count.
+ * Also returns the file path from markdown-it env if available.
+ */
+export function validateLineNumberAndGetFilePath(
+    params: RuleParams,
+    rawLineNumber: number | undefined,
+): {lineNumber: number; filePath: string} {
+    // Validate lineNumber to prevent markdownlint exception
+    const linesCount = params.lines.length;
+    const lineNumber = Math.min(Math.max(1, rawLineNumber || 1), linesCount);
+
+    // Get the file path from markdown-it env if available
+    // This helps identify which include file contains the broken link
+    const env = (params.parsers.markdownit as any).env;
+    const filePath = env?.path || params.name;
+
+    return {lineNumber, filePath};
+}
+
+/**
+ * Creates error context with optional file path information.
+ */
+export function createContextWithFileInfo(
+    baseContext: string,
+    filePath: string,
+    paramsName: string,
+): string {
+    const parts = [baseContext];
+    if (filePath !== paramsName) {
+        parts.push(`File: ${filePath}`); // Show include file path if different
+    }
+    return parts.filter(Boolean).join('; ');
+}
+
+/**
  * Finds all inline tokens containing links and calls handler for each link.
  * Used by rules that validate links (YFM002, YFM003, YFM010).
  *
@@ -30,9 +66,20 @@ export function findLinksInInlineTokens(
                         if (handler) {
                             handler(linkToken, inline);
                         } else {
+                            const rawLineNumber = link.lineNumber || inline.lineNumber;
+                            const {lineNumber, filePath} = validateLineNumberAndGetFilePath(
+                                params,
+                                rawLineNumber,
+                            );
+                            const context = createContextWithFileInfo(
+                                link.line || inline.line,
+                                filePath,
+                                params.name,
+                            );
+
                             onError({
-                                lineNumber: link.lineNumber || inline.lineNumber,
-                                context: link.line || inline.line,
+                                lineNumber,
+                                context,
                             });
                         }
                     }
@@ -69,9 +116,20 @@ export function findImagesInInlineTokens(
                         if (handler) {
                             handler(imageToken, inline);
                         } else {
+                            const rawLineNumber = image.lineNumber || inline.lineNumber;
+                            const {lineNumber, filePath} = validateLineNumberAndGetFilePath(
+                                params,
+                                rawLineNumber,
+                            );
+                            const context = createContextWithFileInfo(
+                                image.line || inline.line,
+                                filePath,
+                                params.name,
+                            );
+
                             onError({
-                                lineNumber: image.lineNumber || inline.lineNumber,
-                                context: image.line || inline.line,
+                                lineNumber,
+                                context,
                             });
                         }
                     }
