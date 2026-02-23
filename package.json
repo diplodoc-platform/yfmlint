@@ -1,6 +1,6 @@
 {
   "name": "@diplodoc/yfmlint",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "description": "YFM (Yandex Flavored Markdown) syntax linter with custom rules for Diplodoc platform",
   "keywords": [
     "docs",

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.5](https://github.com/diplodoc-platform/yfmlint/compare/v1.3.4...v1.3.5) (2026-02-23)
+
+
+### Bug Fixes
+
+* error in lineNumber DOCSTOOLS-5294 ([6168924](https://github.com/diplodoc-platform/yfmlint/commit/61689247a8bdf560357f8bf49c5038c0820edeca))
+* Update infra to v1.13.2 ([7418bb5](https://github.com/diplodoc-platform/yfmlint/commit/7418bb55cf730519d8eb2e53b49e2f0eaa8fef32))
+
 ## [1.3.4](https://github.com/diplodoc-platform/yfmlint/compare/v1.3.3...v1.3.4) (2026-01-12)
 
 
