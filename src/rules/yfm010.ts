@@ -1,8 +1,9 @@
-import type {Rule} from 'markdownlint';
+import type {MarkdownItToken, Rule} from 'markdownlint';
 
 import {
-    createContextWithFileInfo,
     findLinksInInlineTokens,
+    formatIncludeChain,
+    resolveIncludeSource,
     validateLineNumberAndGetFilePath,
 } from './helpers';
 
@@ -18,22 +19,23 @@ export const yfm010: Rule = {
         }
 
         findLinksInInlineTokens(params, 'YFM010', onError, (linkToken, inline) => {
-            // Plugins from @diplodoc/transform set YFM010 attribute on links
-            // that reference autotitle anchors that don't exist
-            const autotitleAnchorError = `[Unreachable autotitle anchor: "${linkToken.attrGet('href')}"]`;
-
-            // Get the original line number from token
+            const href = linkToken.attrGet('href') || '';
             const rawLineNumber = linkToken.lineNumber || inline.lineNumber;
-            const {lineNumber, filePath} = validateLineNumberAndGetFilePath(params, rawLineNumber);
+            const includeSource = resolveIncludeSource(
+                params,
+                rawLineNumber,
+                linkToken as MarkdownItToken,
+                inline,
+            );
 
-            const baseContext = [autotitleAnchorError, linkToken.line || ''].join(' ');
-
-            const context = createContextWithFileInfo(baseContext, filePath, params.name);
-
-            onError({
-                lineNumber,
-                context,
-            });
+            if (includeSource) {
+                const context = formatIncludeChain(includeSource, href);
+                onError({lineNumber: includeSource.lineNumber, context});
+            } else {
+                const {lineNumber} = validateLineNumberAndGetFilePath(params, rawLineNumber);
+                const context = `Unreachable autotitle anchor: "${href}"; Line: ${rawLineNumber}`;
+                onError({lineNumber, context});
+            }
         });
     },
 };
