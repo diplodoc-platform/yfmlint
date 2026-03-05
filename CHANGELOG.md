@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.3.5...v1.4.0) (2026-03-05)
+
+
+### Features
+
+* **yfmlint:** use token source metadata for include chain in error context ([392c5b2](https://github.com/diplodoc-platform/yfmlint/commit/392c5b272bb14a76f3f7ba8e7a71a0ea2680553a))
+
 ## [1.3.5](https://github.com/diplodoc-platform/yfmlint/compare/v1.3.4...v1.3.5) (2026-02-23)
 
 
