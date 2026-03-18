@@ -45,7 +45,7 @@
     "lint": "lint update && lint",
     "lint:fix": "lint update && lint fix",
     "pre-commit": "lint update && lint-staged",
-    "prepare": "husky"
+    "prepare": "husky || exit 0"
   },
   "devDependencies": {
     "@diplodoc/lint": "^1.13.2",

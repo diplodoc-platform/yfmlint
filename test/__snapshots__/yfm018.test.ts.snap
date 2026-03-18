@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`YFM018 > should fire for term definitions from includes 1`] = `
+[
+  "yfm018-fire.md: 1: YFM018 / term-definition-from-include Term definition comes from an included file [Term definition is provided via include. Consider moving it to the end of the page or defining the term locally.]",
+]
+`;
+
+exports[`YFM018 > should fire only for included terms in mixed content 1`] = `
+[
+  "yfm018-mixed.md: 1: YFM018 / term-definition-from-include Term definition comes from an included file [Term definition is provided via include. Consider moving it to the end of the page or defining the term locally.]",
+]
+`;
