@@ -111,6 +111,9 @@ export function log(errors: LintError[], logger: Logger) {
             case LogLevels.WARN:
                 logger.warn(message);
                 break;
+            case LogLevels.INFO:
+                logger.info(message);
+                break;
             case LogLevels.DISABLED:
             default:
                 break;

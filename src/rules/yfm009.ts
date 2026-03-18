@@ -1,4 +1,79 @@
 import type {Rule} from 'markdownlint';
+import type {TokenWithAttrs} from '../typings';
+
+function isFromInclude(token: TokenWithAttrs): boolean {
+    return token.attrGet('from-include') === 'true';
+}
+
+function isLintMarker(token: TokenWithAttrs): boolean {
+    return token.type === '__yfm_lint';
+}
+
+function findMatchingDfnOpen(tokens: TokenWithAttrs[], closeIndex: number): number {
+    let depth = 0;
+    for (let j = closeIndex; j >= 0; j--) {
+        if (tokens[j].type === 'dfn_close') depth++;
+        if (tokens[j].type === 'dfn_open') {
+            depth--;
+            if (depth === 0) return j;
+        }
+    }
+    return -1;
+}
+
+/**
+ * Advances past tokens that are not real content: `__yfm_lint` markers
+ * and from-include dfn pairs.
+ *
+ * @param tokens - Array of tokens to process
+ * @param from - Starting position in the tokens array
+ * @returns Position of the first real content token after skipping non-content tokens
+ */
+function skipNonContent(tokens: TokenWithAttrs[], from: number): number {
+    let pos = from;
+    while (pos < tokens.length) {
+        if (isLintMarker(tokens[pos])) {
+            pos++;
+            continue;
+        }
+        if (tokens[pos].type === 'dfn_open' && isFromInclude(tokens[pos])) {
+            pos = skipDfnPair(tokens, pos);
+            continue;
+        }
+        break;
+    }
+    return pos;
+}
+
+/**
+ * Skips a complete dfn pair (open and close) starting from the given position.
+ *
+ * @param tokens - Array of tokens to process
+ * @param from - Starting position (should point to a dfn_open token)
+ * @returns Position after the matching dfn_close token
+ */
+function skipDfnPair(tokens: TokenWithAttrs[], from: number): number {
+    let depth = 1;
+    let pos = from + 1;
+    while (pos < tokens.length && depth > 0) {
+        if (tokens[pos].type === 'dfn_open') depth++;
+        if (tokens[pos].type === 'dfn_close') depth--;
+        pos++;
+    }
+    return pos;
+}
+
+function isLocalDfnClose(tokens: TokenWithAttrs[], index: number): boolean {
+    if (tokens[index].type !== 'dfn_close') return false;
+    const openIndex = findMatchingDfnOpen(tokens, index);
+    return openIndex < 0 || !isFromInclude(tokens[openIndex]);
+}
+
+function hasLocalDfnOpenAt(tokens: TokenWithAttrs[], index: number): boolean {
+    return (
+        index < tokens.length && tokens[index].type === 'dfn_open' && !isFromInclude(tokens[index])
+    );
+}
 
 export const yfm009: Rule = {
     names: ['YFM009', 'no-term-definition-in-content'],
@@ -11,57 +86,42 @@ export const yfm009: Rule = {
             return;
         }
 
-        // The term plugin from @diplodoc/transform creates dfn_open/dfn_close tokens
-        // for term definitions (e.g., [term]: definition)
-        let lastCloseIndex = -1;
-        const tokens = params.parsers.markdownit.tokens;
+        const tokens = params.parsers.markdownit.tokens as TokenWithAttrs[];
         const size = tokens.length;
+        let lastLocalCloseIndex = -1;
 
-        // Check for content between term definitions
         for (let i = 0; i < size; i++) {
-            // Track the last dfn_close token
-            if (tokens[i].type === 'dfn_close') {
-                lastCloseIndex = i;
-            }
-
-            // Only process dfn_close tokens
-            if (tokens[i].type !== 'dfn_close') {
+            if (!isLocalDfnClose(tokens, i)) {
                 continue;
             }
 
-            // If this is the last token, it's OK (terms at end)
+            lastLocalCloseIndex = i;
+
             if (i === size - 1) {
                 continue;
             }
 
-            // Allow consecutive term definitions (dfn_close -> dfn_open)
-            if (tokens[i + 1].type === 'dfn_open') {
+            const nextReal = skipNonContent(tokens, i + 1);
+            if (nextReal >= size || hasLocalDfnOpenAt(tokens, nextReal)) {
                 continue;
             }
 
-            // Allow empty line between term definitions (dfn_close -> empty -> dfn_open)
-            if (i < size - 2 && tokens[i + 2].type === 'dfn_open') {
-                continue;
-            }
-
-            // Content found between term definitions - error
             onError({
                 lineNumber: tokens[i + 1]?.lineNumber || tokens[i].lineNumber || 1,
                 detail: 'There is a content between term definition. All term defitions should be placed at the end of file.',
             });
         }
 
-        // Check that file ends with term definitions
-        if (lastCloseIndex === -1) {
-            return; // No term definitions found
+        if (lastLocalCloseIndex === -1) {
+            return;
         }
 
-        // File must end with term definitions (lastCloseIndex should be last token)
-        if (lastCloseIndex !== size - 1) {
+        const tailPos = skipNonContent(tokens, lastLocalCloseIndex + 1);
+        if (tailPos < size) {
             onError({
                 lineNumber:
-                    tokens[lastCloseIndex + 1]?.lineNumber ||
-                    tokens[lastCloseIndex].lineNumber ||
+                    tokens[lastLocalCloseIndex + 1]?.lineNumber ||
+                    tokens[lastLocalCloseIndex].lineNumber ||
                     1,
                 detail: 'The file must end with term only.',
             });
