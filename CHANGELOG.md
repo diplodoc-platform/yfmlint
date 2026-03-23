@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.4.0...v1.5.0) (2026-03-23)
+
+
+### Features
+
+* Change yfm009 to error, add yfm018 ([3a1b63f](https://github.com/diplodoc-platform/yfmlint/commit/3a1b63f9f76bb59b8d3b73f9132821a5eb0bd1e0))
+
 ## [1.4.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.3.5...v1.4.0) (2026-03-05)
 
 
