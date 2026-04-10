@@ -18,6 +18,17 @@ interface TokenMeta {
     includeChain?: IncludeChainEntry[];
 }
 
+export interface DirectiveMatch {
+    directive: string;
+    lineNumber: number;
+    line: string;
+}
+
+export interface PairedDirectiveSpec {
+    open: RegExp;
+    close: RegExp;
+}
+
 /**
  * Validates and adjusts lineNumber to prevent markdownlint exception.
  * When include files are used, lineNumber might exceed the original file's line count.
@@ -259,4 +270,89 @@ export function findYfmLintTokens(
                 }
             }
         });
+}
+
+export function getIgnoredLineNumbers(params: RuleParams): Set<number> {
+    const ignored = new Set<number>();
+
+    params.parsers.markdownit.tokens.forEach((token) => {
+        if ((token.type === 'fence' || token.type === 'code_block') && token.map) {
+            const [start, end] = token.map;
+
+            for (let line = start; line < end; line++) {
+                ignored.add(line + 1);
+            }
+        }
+    });
+
+    return ignored;
+}
+
+export function stripInlineCode(line: string): string {
+    return line.replace(/(`+).*?\1/g, (m) => ' '.repeat(m.length));
+}
+
+export function findDirectiveMatches(params: RuleParams): DirectiveMatch[] {
+    const ignoredLines = getIgnoredLineNumbers(params);
+    const directiveRe = /(^|[^\\]){%\s*([^%]+?)\s*%}/g;
+    const matches: DirectiveMatch[] = [];
+
+    params.lines.forEach((line, index) => {
+        const lineNumber = index + 1;
+
+        if (ignoredLines.has(lineNumber)) {
+            return;
+        }
+
+        const stripped = stripInlineCode(line);
+        let match: RegExpExecArray | null;
+        const localRe = new RegExp(directiveRe.source, 'g');
+
+        while ((match = localRe.exec(stripped)) !== null) {
+            matches.push({
+                directive: match[2].trim(),
+                lineNumber,
+                line,
+            });
+        }
+    });
+
+    return matches;
+}
+
+export function findPairedDirectiveIssues(
+    params: RuleParams,
+    spec: PairedDirectiveSpec,
+): Array<{lineNumber: number; context: string; detail: string}> {
+    const issues: Array<{lineNumber: number; context: string; detail: string}> = [];
+    const stack: DirectiveMatch[] = [];
+
+    for (const match of findDirectiveMatches(params)) {
+        if (spec.open.test(match.directive)) {
+            stack.push(match);
+            continue;
+        }
+
+        if (spec.close.test(match.directive)) {
+            const open = stack.pop();
+
+            if (!open) {
+                issues.push({
+                    lineNumber: match.lineNumber,
+                    context: match.line,
+                    detail: `Unexpected closing directive '{% ${match.directive} %}'`,
+                });
+            }
+        }
+    }
+
+    stack.forEach((unclosed) => {
+        issues.push({
+            lineNumber: unclosed.lineNumber,
+            context: unclosed.line,
+            detail: `Directive '{% ${unclosed.directive} %}' must be closed`,
+        });
+    });
+
+    return issues;
 }

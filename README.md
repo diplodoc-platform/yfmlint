@@ -11,7 +11,7 @@ YFM (Yandex Flavored Markdown) syntax linter with custom rules for Diplodoc plat
 
 ## Features
 
-- **11 custom YFM rules** (YFM001-YFM011) for validating YFM-specific syntax
+- **17 custom YFM rules** (YFM001-YFM023) for validating YFM-specific syntax
 - **Integration with markdownlint** - all standard markdownlint rules are available
 - **Plugin support** - integrates with plugins from `@diplodoc/transform` (e.g., `term` plugin)
 - **Configurable rule levels** - error, warn, info, or disabled
@@ -93,7 +93,7 @@ For detailed information about architecture, development, and contributing, see 
 
 ## YFM Rules
 
-This package extends markdownlint with 11 custom rules for YFM syntax validation. All standard [markdownlint rules](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md) are also available.
+This package extends markdownlint with custom rules for YFM syntax validation. All standard [markdownlint rules](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md) are also available.
 
 ### YFM001 - Inline code line length
 
@@ -224,3 +224,45 @@ Validates that links to autotitle anchors reference existing titles.
 **Aliases:** `max-svg-size`
 
 Validates that SVG images don't exceed the maximum size limit. Requires image processing plugins from `@diplodoc/transform`.
+
+### YFM018 - Term definition from include
+
+**Tags:** `term`  
+**Aliases:** `term-definition-from-include`
+
+Validates that term definitions originating from included files are reported explicitly.
+
+### YFM019 - Note block structure is invalid
+
+**Tags:** `note`  
+**Aliases:** `note-block-invalid`
+
+Validates `note` blocks defined with `{% note ... %}` and `{% endnote %}`. Reports both unclosed blocks and stray closing directives.
+
+### YFM020 - Cut block structure is invalid
+
+**Tags:** `cut`  
+**Aliases:** `cut-block-invalid`
+
+Validates `cut` blocks defined with `{% cut ... %}` and `{% endcut %}`. Reports both unclosed blocks and stray closing directives.
+
+### YFM021 - YFM directive is unknown or has invalid syntax
+
+**Tags:** `directives`  
+**Aliases:** `invalid-yfm-directive`
+
+Validates Liquid/YFM directives such as `note`, `cut`, `list tabs`, `include`, `if`, and `for`. Reports unknown directives and malformed directive syntax, for example `{% lis %}`.
+
+### YFM022 - If block structure is invalid
+
+**Tags:** `directives`  
+**Aliases:** `if-block-invalid`
+
+Validates `if` blocks defined with `{% if ... %}` and `{% endif %}`. Reports both unclosed blocks and stray closing directives.
+
+### YFM023 - For block structure is invalid
+
+**Tags:** `directives`  
+**Aliases:** `for-block-invalid`
+
+Validates `for` blocks defined with `{% for ... in ... %}` and `{% endfor %}`. Reports both unclosed blocks and stray closing directives.
