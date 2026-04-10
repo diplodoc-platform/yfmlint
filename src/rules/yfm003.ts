@@ -1,6 +1,11 @@
-import type {Rule} from 'markdownlint';
+import type {MarkdownItToken, Rule} from 'markdownlint';
 
-import {findLinksInInlineTokens} from './helpers';
+import {
+    findLinksInInlineTokens,
+    formatIncludeChain,
+    resolveIncludeSource,
+    validateLineNumberAndGetFilePath,
+} from './helpers';
 
 const REASON_DESCRIPTION: Record<string, string> = {
     'file-not-found': 'File does not exist in the project',
@@ -20,9 +25,6 @@ export const yfm003: Rule = {
         }
 
         findLinksInInlineTokens(params, 'YFM003', onError, (linkToken, inline) => {
-            // Plugins from @diplodoc/transform set YFM003 attribute on links
-            // that are unreachable (file not found, missing in TOC, etc.)
-            // The attribute value contains the reason code
             const reason = linkToken.attrGet('YFM003');
 
             if (reason) {
@@ -31,17 +33,30 @@ export const yfm003: Rule = {
                         ? `Reason: ${REASON_DESCRIPTION[reason]}`
                         : '';
 
-                const context = [
-                    `Unreachable link: "${linkToken.attrGet('href')}"`,
-                    reasonDescription,
-                    `Line: ${linkToken.lineNumber || inline.lineNumber}`,
-                ]
-                    .filter(Boolean)
-                    .join('; ');
-                onError({
-                    lineNumber: linkToken.lineNumber || inline.lineNumber,
-                    context,
-                });
+                const rawLineNumber = linkToken.lineNumber || inline.lineNumber;
+                const href = linkToken.attrGet('href') || '';
+                const includeSource = resolveIncludeSource(
+                    params,
+                    rawLineNumber,
+                    linkToken as MarkdownItToken,
+                    inline,
+                );
+
+                if (includeSource) {
+                    const chain = formatIncludeChain(includeSource, href);
+                    const context = [chain, reasonDescription].filter(Boolean).join('; ');
+                    onError({lineNumber: includeSource.lineNumber, context});
+                } else {
+                    const {lineNumber} = validateLineNumberAndGetFilePath(params, rawLineNumber);
+                    const context = [
+                        `Unreachable link: "${href}"`,
+                        reasonDescription,
+                        `Line: ${rawLineNumber}`,
+                    ]
+                        .filter(Boolean)
+                        .join('; ');
+                    onError({lineNumber, context});
+                }
             }
         });
     },
