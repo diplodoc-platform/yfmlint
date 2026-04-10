@@ -1,8 +1,20 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`YFM005 > Tab list with close token (with plugin) 1`] = `
+[
+  "test2.md: 1: YFM005 / tab-list-not-closed Tab list not closed [Context: "{% list tabs %}"]",
+]
+`;
+
 exports[`YFM005 > Tab list with close token 1`] = `
 [
   "test2.md: 1: YFM005 / tab-list-not-closed Tab list not closed [Context: "{% list tabs %}"]",
+]
+`;
+
+exports[`YFM005 > Tab list without close token (with plugin) 1`] = `
+[
+  "test1.md: 1: YFM005 / tab-list-not-closed Tab list not closed [Context: "{% list tabs %}"]",
 ]
 `;
 

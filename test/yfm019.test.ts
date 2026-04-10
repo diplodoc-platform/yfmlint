@@ -46,6 +46,25 @@ describe('YFM019', () => {
         expect(formatErrors(errors).filter((e) => e.includes('YFM019'))).toEqual([]);
     });
 
+    it('reports invalid note type', async () => {
+        const input = dedent`
+            {% note warni "ddd" %}
+
+            Это примечание.
+
+            {% endnote %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'note-syntax.md', {
+                lintConfig: {YFM019: LogLevels.ERROR},
+            })) || [];
+
+        const syntaxErrors = formatErrors(errors).filter((e) => e.includes('Invalid note syntax'));
+        expect(syntaxErrors).toHaveLength(1);
+        expect(syntaxErrors[0]).toContain('Expected: note (info|tip|warning|alert)');
+    });
+
     it('reports stray endnote', async () => {
         const input = dedent`
             {% endnote %}
