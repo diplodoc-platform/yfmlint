@@ -1,11 +1,15 @@
 export const NOTE_OPEN_RE = /^note(?:\s|$)/;
 export const NOTE_CLOSE_RE = /^endnote$/;
+export const NOTE_STRICT_RE = /^note\s+(?:alert|info|tip|warning)(?:\s+"[^"]*")?$/;
 
 export const CUT_OPEN_RE = /^cut(?:\s|$)/;
 export const CUT_CLOSE_RE = /^endcut$/;
+export const CUT_STRICT_RE = /^cut\s+["'].+["']$/;
 
 export const TABS_OPEN_RE = /^list\s+tabs(?:\s|$)/;
 export const TABS_CLOSE_RE = /^endlist$/;
+export const TABS_STRICT_RE =
+    /^list\s+tabs(?:\s+(?:regular|radio|dropdown|accordion))?(?:\s+[A-Za-z0-9_.-]+=[^\s%]+)*$/;
 
 const INCLUDE_RE = /^include(?:\s|$)/;
 const INCLUDED_OPEN_RE = /^included\s*\(.+\)$/;

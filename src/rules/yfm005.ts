@@ -1,8 +1,8 @@
 import type {Rule} from 'markdownlint';
 import type {TokenWithAttrs} from '../typings';
 
-import {TABS_CLOSE_RE, TABS_OPEN_RE} from './directives';
-import {findPairedDirectiveIssues} from './helpers';
+import {TABS_CLOSE_RE, TABS_OPEN_RE, TABS_STRICT_RE} from './directives';
+import {findDirectiveMatches, findPairedDirectiveIssues} from './helpers';
 
 export const yfm005: Rule = {
     names: ['YFM005', 'tab-list-not-closed'],
@@ -43,5 +43,15 @@ export const yfm005: Rule = {
                 },
             );
         }
+
+        findDirectiveMatches(params).forEach((match) => {
+            if (TABS_OPEN_RE.test(match.directive) && !TABS_STRICT_RE.test(match.directive)) {
+                onError({
+                    lineNumber: match.lineNumber,
+                    detail: `Invalid tabs syntax. Expected: list tabs (regular|radio|dropdown|accordion)`,
+                    context: match.line,
+                });
+            }
+        });
     },
 };

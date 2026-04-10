@@ -1,7 +1,7 @@
 import type {Rule} from 'markdownlint';
 
-import {CUT_CLOSE_RE, CUT_OPEN_RE} from './directives';
-import {findPairedDirectiveIssues} from './helpers';
+import {CUT_CLOSE_RE, CUT_OPEN_RE, CUT_STRICT_RE} from './directives';
+import {findDirectiveMatches, findPairedDirectiveIssues} from './helpers';
 
 export const yfm020: Rule = {
     names: ['YFM020', 'cut-block-invalid'],
@@ -24,5 +24,15 @@ export const yfm020: Rule = {
                 });
             },
         );
+
+        findDirectiveMatches(params).forEach((match) => {
+            if (CUT_OPEN_RE.test(match.directive) && !CUT_STRICT_RE.test(match.directive)) {
+                onError({
+                    lineNumber: match.lineNumber,
+                    detail: `Invalid cut syntax. Expected: cut "title"`,
+                    context: match.line,
+                });
+            }
+        });
     },
 };

@@ -1,5 +1,4 @@
 import {describe, expect, it} from 'vitest';
-import tabs from '@diplodoc/transform/lib/plugins/tabs';
 import dedent from 'ts-dedent';
 
 import {LogLevels, yfmlint} from '../src';
@@ -14,45 +13,55 @@ const tabListWithoutClose = dedent`
     Tab 2 content
 `;
 
-const tabListWithClose = dedent`
-    {% list tabs %}
-
-    Tab 1 content
-
-    Tab 2 content
-    {% endlist %}
-`;
-
-const lint = async (input: string, path: string) => {
-    return yfmlint(input, path, {
-        lintConfig: {
-            YFM005: LogLevels.ERROR,
-        },
-        plugins: [tabs],
-    });
-};
-
 describe('YFM005', () => {
-    it('Tab list without close token', async () => {
-        const errors = (await lint(tabListWithoutClose, 'test1.md')) || [];
-        expect(formatErrors(errors)).toMatchSnapshot();
-    });
-
-    it('Tab list with close token', async () => {
-        const errors = (await lint(tabListWithClose, 'test2.md')) || [];
-        expect(formatErrors(errors)).toMatchSnapshot();
-    });
-
-    it('falls back to raw directive parsing without tabs plugin', async () => {
+    it('reports unclosed tab list', async () => {
         const errors =
-            (await yfmlint(tabListWithoutClose, 'test3.md', {
-                lintConfig: {
-                    YFM005: LogLevels.ERROR,
-                },
+            (await yfmlint(tabListWithoutClose, 'test.md', {
+                lintConfig: {YFM005: LogLevels.ERROR},
             })) || [];
 
         expect(formatErrors(errors)).toEqual([
-            'test3.md: 1: YFM005 / tab-list-not-closed Tab list not closed [Directive \'{% list tabs %}\' must be closed] [Context: "{% list tabs %}"]',
+            'test.md: 1: YFM005 / tab-list-not-closed Tab list not closed [Directive \'{% list tabs %}\' must be closed] [Context: "{% list tabs %}"]',
         ]);
+    });
+
+    it('accepts properly closed tab list', async () => {
+        const input = dedent`
+            {% list tabs %}
+
+            - Tab 1
+
+              Content
+
+            {% endlist %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {
+                lintConfig: {YFM005: LogLevels.ERROR},
+            })) || [];
+
+        expect(formatErrors(errors)).toEqual([]);
+    });
+
+    it('reports invalid tabs variant', async () => {
+        const input = dedent`
+            {% list tabs rado %}
+
+            - Tab 1
+
+              Content
+
+            {% endlist %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'tabs-syntax.md', {
+                lintConfig: {YFM005: LogLevels.ERROR},
+            })) || [];
+
+        const syntaxErrors = formatErrors(errors).filter((e) => e.includes('Invalid tabs syntax'));
+        expect(syntaxErrors).toHaveLength(1);
+        expect(syntaxErrors[0]).toContain('Expected: list tabs (regular|radio|dropdown|accordion)');
     });
 });
