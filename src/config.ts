@@ -20,4 +20,9 @@ export default {
     YFM010: LogLevels.WARN, // Autotitle anchor is missed
     YFM011: LogLevels.WARN, // Max svg size
     YFM018: LogLevels.INFO, // Term definition from include
+    YFM019: LogLevels.WARN, // Note block not closed
+    YFM020: LogLevels.WARN, // Cut block not closed
+    YFM021: LogLevels.WARN, // Unknown or invalid YFM directive
+    YFM022: LogLevels.WARN, // If block not closed
+    YFM023: LogLevels.WARN, // For block not closed
 };

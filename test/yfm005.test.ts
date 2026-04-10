@@ -42,4 +42,17 @@ describe('YFM005', () => {
         const errors = (await lint(tabListWithClose, 'test2.md')) || [];
         expect(formatErrors(errors)).toMatchSnapshot();
     });
+
+    it('falls back to raw directive parsing without tabs plugin', async () => {
+        const errors =
+            (await yfmlint(tabListWithoutClose, 'test3.md', {
+                lintConfig: {
+                    YFM005: LogLevels.ERROR,
+                },
+            })) || [];
+
+        expect(formatErrors(errors)).toEqual([
+            'test3.md: 1: YFM005 / tab-list-not-closed Tab list not closed [Directive \'{% list tabs %}\' must be closed] [Context: "{% list tabs %}"]',
+        ]);
+    });
 });
