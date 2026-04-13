@@ -1,12 +1,46 @@
 import type {Rule} from 'markdownlint';
 
-import {CUT_CLOSE_RE, CUT_OPEN_RE, CUT_STRICT_RE} from './directives';
-import {findDirectiveMatches, findPairedDirectiveIssues} from './helpers';
+import {
+    CUT_OPEN_RE,
+    CUT_STRICT_RE,
+    INCLUDE_STRICT_RE,
+    NOTE_OPEN_RE,
+    NOTE_STRICT_RE,
+    TABS_OPEN_RE,
+    TABS_STRICT_RE,
+    isKnownDirective,
+} from './directives';
+import {findDirectiveMatches} from './helpers';
+
+const INCLUDE_BROAD_RE = /^include(?:\s|$)/;
+
+const SYNTAX_CHECKS = [
+    {
+        match: NOTE_OPEN_RE,
+        valid: NOTE_STRICT_RE,
+        message: `Invalid note syntax. Valid types: info, tip, warning, alert`,
+    },
+    {
+        match: CUT_OPEN_RE,
+        valid: CUT_STRICT_RE,
+        message: `Invalid cut syntax. Expected: cut "title"`,
+    },
+    {
+        match: TABS_OPEN_RE,
+        valid: TABS_STRICT_RE,
+        message: `Invalid tabs syntax. Valid variants: regular, radio, dropdown, accordion`,
+    },
+    {
+        match: INCLUDE_BROAD_RE,
+        valid: INCLUDE_STRICT_RE,
+        message: `Invalid include syntax. Expected: include [text](path) or include notitle [text](path)`,
+    },
+];
 
 export const yfm020: Rule = {
-    names: ['YFM020', 'cut-block-invalid'],
-    description: 'Cut block structure is invalid',
-    tags: ['cut'],
+    names: ['YFM020', 'invalid-yfm-directive'],
+    description: 'YFM directive is unknown or has invalid syntax',
+    tags: ['directives'],
     parser: 'markdownit',
     function: function YFM020(params, onError) {
         const {config} = params;
@@ -15,21 +49,26 @@ export const yfm020: Rule = {
             return;
         }
 
-        findPairedDirectiveIssues(params, {open: CUT_OPEN_RE, close: CUT_CLOSE_RE}).forEach(
-            (issue) => {
-                onError({
-                    lineNumber: issue.lineNumber,
-                    detail: issue.detail,
-                    context: issue.context,
-                });
-            },
-        );
-
         findDirectiveMatches(params).forEach((match) => {
-            if (CUT_OPEN_RE.test(match.directive) && !CUT_STRICT_RE.test(match.directive)) {
+            // Check syntax of known directive families first
+            for (const check of SYNTAX_CHECKS) {
+                if (check.match.test(match.directive)) {
+                    if (!check.valid.test(match.directive)) {
+                        onError({
+                            lineNumber: match.lineNumber,
+                            detail: check.message,
+                            context: match.line,
+                        });
+                    }
+                    return;
+                }
+            }
+
+            // Check for unknown directives
+            if (!isKnownDirective(match.directive)) {
                 onError({
                     lineNumber: match.lineNumber,
-                    detail: `Invalid cut syntax. Expected: cut "title"`,
+                    detail: `Unknown or invalid directive '{% ${match.directive} %}'`,
                     context: match.line,
                 });
             }

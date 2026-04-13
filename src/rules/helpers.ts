@@ -126,6 +126,14 @@ export function findYfmLintTokens(
         });
 }
 
+/**
+ * Returns a set of 1-based line numbers that should be skipped during directive scanning.
+ * Lines inside fenced code blocks (```` ``` ```) and indented code blocks are excluded
+ * to prevent false positives on code examples that contain YFM syntax.
+ *
+ * @param params - Rule parameters from markdownlint
+ * @returns Set of line numbers (1-based) that belong to code blocks
+ */
 export function getIgnoredLineNumbers(params: RuleParams): Set<number> {
     const ignored = new Set<number>();
 
@@ -142,10 +150,25 @@ export function getIgnoredLineNumbers(params: RuleParams): Set<number> {
     return ignored;
 }
 
+/**
+ * Replaces inline code spans (backtick-delimited) with spaces of the same length.
+ * Preserves character positions so that match offsets remain accurate.
+ * Handles single and multi-backtick spans (e.g., `` `code` `` and ` ``code`` `).
+ *
+ * @param line - A single line of markdown text
+ * @returns The line with all inline code spans replaced by spaces
+ */
 export function stripInlineCode(line: string): string {
     return line.replace(/(`+).*?\1/g, (m) => ' '.repeat(m.length));
 }
 
+/**
+ * Finds all YFM/Liquid directive matches (`{% ... %}`) in the document lines,
+ * skipping lines inside code blocks and inline code spans.
+ *
+ * @param params - Rule parameters from markdownlint
+ * @returns Array of directive matches with their directive content, line number, and original line text
+ */
 export function findDirectiveMatches(params: RuleParams): DirectiveMatch[] {
     const ignoredLines = getIgnoredLineNumbers(params);
     const directiveRe = /(^|[^\\]){%\s*([^%]+?)\s*%}/g;
@@ -174,6 +197,16 @@ export function findDirectiveMatches(params: RuleParams): DirectiveMatch[] {
     return matches;
 }
 
+/**
+ * Validates that opening and closing directives are properly paired using a stack.
+ * Reports two types of issues:
+ * - Unexpected closing directive (closing without a matching opening)
+ * - Unclosed opening directive (opening without a matching closing)
+ *
+ * @param params - Rule parameters from markdownlint
+ * @param spec - Pair specification with `open` and `close` regexes tested against the directive content
+ * @returns Array of issues, each with a line number, context (original line), and detail message
+ */
 export function findPairedDirectiveIssues(
     params: RuleParams,
     spec: PairedDirectiveSpec,

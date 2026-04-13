@@ -1,13 +1,35 @@
 import type {Rule} from 'markdownlint';
 import type {TokenWithAttrs} from '../typings';
 
-import {TABS_CLOSE_RE, TABS_OPEN_RE, TABS_STRICT_RE} from './directives';
-import {findDirectiveMatches, findPairedDirectiveIssues} from './helpers';
+import {
+    CHANGELOG_CLOSE_RE,
+    CHANGELOG_OPEN_RE,
+    CUT_CLOSE_RE,
+    CUT_OPEN_RE,
+    FOR_CLOSE_RE,
+    FOR_OPEN_RE,
+    IF_CLOSE_RE,
+    IF_OPEN_RE,
+    NOTE_CLOSE_RE,
+    NOTE_OPEN_RE,
+    TABS_CLOSE_RE,
+    TABS_OPEN_RE,
+} from './directives';
+import {findPairedDirectiveIssues} from './helpers';
+
+const PAIRED_SPECS = [
+    {open: NOTE_OPEN_RE, close: NOTE_CLOSE_RE},
+    {open: CUT_OPEN_RE, close: CUT_CLOSE_RE},
+    {open: TABS_OPEN_RE, close: TABS_CLOSE_RE},
+    {open: CHANGELOG_OPEN_RE, close: CHANGELOG_CLOSE_RE},
+    {open: IF_OPEN_RE, close: IF_CLOSE_RE},
+    {open: FOR_OPEN_RE, close: FOR_CLOSE_RE},
+];
 
 export const yfm005: Rule = {
-    names: ['YFM005', 'tab-list-not-closed'],
-    description: 'Tab list not closed',
-    tags: ['tab'],
+    names: ['YFM005', 'block-not-closed'],
+    description: 'Block is not properly closed',
+    tags: ['directives'],
     parser: 'markdownit',
     function: function YFM005(params, onError) {
         const {config} = params;
@@ -17,8 +39,7 @@ export const yfm005: Rule = {
 
         let hasPluginSignal = false;
 
-        // YFM005 uses paragraph_open tokens, not __yfm_lint tokens
-        // This is different from other rules, so we can't use findYfmLintTokens helper
+        // Plugin-based detection for tabs (more reliable when plugin is loaded)
         params.parsers.markdownit.tokens
             .filter((token) => token.type === 'paragraph_open')
             .forEach((token) => {
@@ -32,26 +53,17 @@ export const yfm005: Rule = {
                 }
             });
 
+        // Raw scan for all paired blocks (fallback when plugin is not loaded)
         if (!hasPluginSignal) {
-            findPairedDirectiveIssues(params, {open: TABS_OPEN_RE, close: TABS_CLOSE_RE}).forEach(
-                (issue) => {
+            for (const spec of PAIRED_SPECS) {
+                findPairedDirectiveIssues(params, spec).forEach((issue) => {
                     onError({
                         lineNumber: issue.lineNumber,
                         detail: issue.detail,
                         context: issue.context,
                     });
-                },
-            );
-        }
-
-        findDirectiveMatches(params).forEach((match) => {
-            if (TABS_OPEN_RE.test(match.directive) && !TABS_STRICT_RE.test(match.directive)) {
-                onError({
-                    lineNumber: match.lineNumber,
-                    detail: `Invalid tabs syntax. Expected: list tabs (regular|radio|dropdown|accordion)`,
-                    context: match.line,
                 });
             }
-        });
+        }
     },
 };

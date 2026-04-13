@@ -5,63 +5,129 @@ import {LogLevels, yfmlint} from '../src';
 
 import {formatErrors} from './utils';
 
-const tabListWithoutClose = dedent`
-    {% list tabs %}
-
-    Tab 1 content
-
-    Tab 2 content
-`;
-
 describe('YFM005', () => {
-    it('reports unclosed tab list', async () => {
-        const errors =
-            (await yfmlint(tabListWithoutClose, 'test.md', {
-                lintConfig: {YFM005: LogLevels.ERROR},
-            })) || [];
-
-        expect(formatErrors(errors)).toEqual([
-            'test.md: 1: YFM005 / tab-list-not-closed Tab list not closed [Directive \'{% list tabs %}\' must be closed] [Context: "{% list tabs %}"]',
-        ]);
-    });
-
-    it('accepts properly closed tab list', async () => {
+    it('reports unclosed note block', async () => {
         const input = dedent`
-            {% list tabs %}
+            {% note tip %}
 
-            - Tab 1
-
-              Content
-
-            {% endlist %}
+            Body
         `;
 
         const errors =
-            (await yfmlint(input, 'test.md', {
-                lintConfig: {YFM005: LogLevels.ERROR},
-            })) || [];
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM005: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors)).toEqual([
+            'test.md: 1: YFM005 / block-not-closed Block is not properly closed [Directive \'{% note tip %}\' must be closed] [Context: "{% note tip %}"]',
+        ]);
+    });
+
+    it('reports unclosed cut block', async () => {
+        const input = dedent`
+            {% cut "Title" %}
+
+            Body
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM005: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors)).toEqual([
+            'test.md: 1: YFM005 / block-not-closed Block is not properly closed [Directive \'{% cut "Title" %}\' must be closed] [Context: "{% cut "Title" %}"]',
+        ]);
+    });
+
+    it('reports unclosed tab list', async () => {
+        const input = dedent`
+            {% list tabs %}
+
+            Tab content
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM005: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors)).toEqual([
+            'test.md: 1: YFM005 / block-not-closed Block is not properly closed [Directive \'{% list tabs %}\' must be closed] [Context: "{% list tabs %}"]',
+        ]);
+    });
+
+    it('reports unclosed if block', async () => {
+        const input = dedent`
+            {% if var %}
+
+            Content
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM005: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors)).toEqual([
+            'test.md: 1: YFM005 / block-not-closed Block is not properly closed [Directive \'{% if var %}\' must be closed] [Context: "{% if var %}"]',
+        ]);
+    });
+
+    it('reports stray closing directive', async () => {
+        const input = dedent`
+            {% endnote %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM005: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors)).toEqual([
+            'test.md: 1: YFM005 / block-not-closed Block is not properly closed [Unexpected closing directive \'{% endnote %}\'] [Context: "{% endnote %}"]',
+        ]);
+    });
+
+    it('accepts properly closed blocks', async () => {
+        const input = dedent`
+            {% note tip %}
+
+            Note body.
+
+            {% endnote %}
+
+            {% cut "Title" %}
+
+            Cut body.
+
+            {% endcut %}
+
+            {% if user %}
+
+            Hello.
+
+            {% endif %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM005: LogLevels.ERROR}})) || [];
 
         expect(formatErrors(errors)).toEqual([]);
     });
 
-    it('reports invalid tabs variant', async () => {
+    it('reports unclosed changelog block', async () => {
         const input = dedent`
-            {% list tabs rado %}
+            {% changelog %}
 
-            - Tab 1
+            Content
 
-              Content
-
-            {% endlist %}
         `;
 
         const errors =
-            (await yfmlint(input, 'tabs-syntax.md', {
-                lintConfig: {YFM005: LogLevels.ERROR},
-            })) || [];
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM005: LogLevels.ERROR}})) || [];
 
-        const syntaxErrors = formatErrors(errors).filter((e) => e.includes('Invalid tabs syntax'));
-        expect(syntaxErrors).toHaveLength(1);
-        expect(syntaxErrors[0]).toContain('Expected: list tabs (regular|radio|dropdown|accordion)');
+        expect(formatErrors(errors)).toEqual([
+            'test.md: 1: YFM005 / block-not-closed Block is not properly closed [Directive \'{% changelog %}\' must be closed] [Context: "{% changelog %}"]',
+        ]);
+    });
+
+    it('ignores directives inside inline code', async () => {
+        const input = 'Use `{% note tip %}` and `{% endnote %}` in your docs.';
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM005: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors)).toEqual([]);
     });
 });

@@ -6,46 +6,129 @@ import {LogLevels, yfmlint} from '../src';
 import {formatErrors} from './utils';
 
 describe('YFM020', () => {
-    it('reports unclosed cut block', async () => {
+    it('reports unknown directive', async () => {
         const input = dedent`
-            {% cut "Title" %}
-
-            Body
+            {% lis %}
         `;
 
         const errors =
-            (await yfmlint(input, 'cut-open.md', {
-                lintConfig: {YFM020: LogLevels.ERROR},
-            })) || [];
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM020: LogLevels.ERROR}})) || [];
 
         expect(formatErrors(errors)).toEqual([
-            'cut-open.md: 1: YFM020 / cut-block-invalid Cut block structure is invalid [Directive \'{% cut "Title" %}\' must be closed] [Context: "{% cut "Title" %}"]',
+            'test.md: 1: YFM020 / invalid-yfm-directive YFM directive is unknown or has invalid syntax [Unknown or invalid directive \'{% lis %}\'] [Context: "{% lis %}"]',
         ]);
     });
 
-    it('ignores directives inside inline code', async () => {
-        const input = 'Use `{% cut "Title" %}` and `{% endcut %}` for spoilers.';
+    it('reports invalid note type', async () => {
+        const input = dedent`
+            {% note warni "ddd" %}
+
+            Body.
+
+            {% endnote %}
+        `;
 
         const errors =
-            (await yfmlint(input, 'cut-inline.md', {
-                lintConfig: {YFM020: LogLevels.ERROR},
-            })) || [];
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM020: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors)).toEqual([
+            'test.md: 1: YFM020 / invalid-yfm-directive YFM directive is unknown or has invalid syntax [Invalid note syntax. Valid types: info, tip, warning, alert] [Context: "{% note warni "ddd" %}"]',
+        ]);
+    });
+
+    it('reports invalid tabs variant', async () => {
+        const input = dedent`
+            {% list tabs rado %}
+
+            - Tab
+
+            {% endlist %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM020: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors)).toEqual([
+            'test.md: 1: YFM020 / invalid-yfm-directive YFM directive is unknown or has invalid syntax [Invalid tabs syntax. Valid variants: regular, radio, dropdown, accordion] [Context: "{% list tabs rado %}"]',
+        ]);
+    });
+
+    it('reports invalid include syntax', async () => {
+        const input = dedent`
+            {% include file.md %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM020: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors)).toEqual([
+            'test.md: 1: YFM020 / invalid-yfm-directive YFM directive is unknown or has invalid syntax [Invalid include syntax. Expected: include [text](path) or include notitle [text](path)] [Context: "{% include file.md %}"]',
+        ]);
+    });
+
+    it('accepts valid include syntax', async () => {
+        const input = dedent`
+            {% include [My file](./file.md) %}
+
+            {% include notitle [Section](./file.md#section) %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM020: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors).filter((e) => e.includes('YFM020'))).toEqual([]);
+    });
+
+    it('does not report valid known directives', async () => {
+        const input = dedent`
+            {% note tip %}
+
+            {% endnote %}
+
+            {% cut "Title" %}
+
+            {% endcut %}
+
+            {% anchor my-id %}
+
+            {% file src="data:text/plain;base64,Cg==" name="empty.txt" %}
+
+            {% if var %}
+
+            {% endif %}
+
+            {% for item in list %}
+
+            {% endfor %}
+
+            {% include [text](./file.md) %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM020: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors).filter((e) => e.includes('YFM020'))).toEqual([]);
+    });
+
+    it('ignores directives inside inline code', async () => {
+        const input = 'Use `{% include %}` to include files and `{% list tabs %}` for tabs.';
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM020: LogLevels.ERROR}})) || [];
 
         expect(formatErrors(errors)).toEqual([]);
     });
 
-    it('reports stray endcut', async () => {
+    it('ignores directives inside fenced code blocks', async () => {
         const input = dedent`
-            {% endcut %}
+            \`\`\`markdown
+            {% lis %}
+            \`\`\`
         `;
 
         const errors =
-            (await yfmlint(input, 'cut-close.md', {
-                lintConfig: {YFM020: LogLevels.ERROR},
-            })) || [];
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM020: LogLevels.ERROR}})) || [];
 
-        expect(formatErrors(errors)).toEqual([
-            'cut-close.md: 1: YFM020 / cut-block-invalid Cut block structure is invalid [Unexpected closing directive \'{% endcut %}\'] [Context: "{% endcut %}"]',
-        ]);
+        expect(formatErrors(errors)).toEqual([]);
     });
 });
