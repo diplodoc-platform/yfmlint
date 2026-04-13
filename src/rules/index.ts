@@ -9,3 +9,4 @@ export {yfm008} from './yfm008';
 export {yfm009} from './yfm009';
 export {yfm010} from './yfm010';
 export {yfm011} from './yfm011';
+export {yfm020} from './yfm020';

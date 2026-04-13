@@ -1,6 +1,17 @@
 import type {MarkdownItToken, RuleOnError, RuleParams} from 'markdownlint';
 import type {TokenWithAttrs} from '../typings';
 
+export interface DirectiveMatch {
+    directive: string;
+    lineNumber: number;
+    line: string;
+}
+
+export interface PairedDirectiveSpec {
+    open: RegExp;
+    close: RegExp;
+}
+
 /**
  * Finds all inline tokens containing links and calls handler for each link.
  * Used by rules that validate links (YFM002, YFM003, YFM010).
@@ -113,4 +124,194 @@ export function findYfmLintTokens(
                 }
             }
         });
+}
+
+/**
+ * Returns a set of 1-based line numbers that should be skipped during directive scanning.
+ * Lines inside fenced code blocks (```` ``` ```) and indented code blocks are excluded
+ * to prevent false positives on code examples that contain YFM syntax.
+ *
+ * @param params - Rule parameters from markdownlint
+ * @returns Set of line numbers (1-based) that belong to code blocks
+ */
+export function getIgnoredLineNumbers(params: RuleParams): Set<number> {
+    const ignored = new Set<number>();
+
+    params.parsers.markdownit.tokens.forEach((token) => {
+        if ((token.type === 'fence' || token.type === 'code_block') && token.map) {
+            const [start, end] = token.map;
+
+            for (let line = start; line < end; line++) {
+                ignored.add(line + 1);
+            }
+        }
+    });
+
+    return ignored;
+}
+
+/**
+ * Replaces inline code spans (backtick-delimited) with spaces of the same length.
+ * Preserves character positions so that match offsets remain accurate.
+ * Handles single and multi-backtick spans (e.g., `` `code` `` and ` ``code`` `).
+ *
+ * @param line - A single line of markdown text
+ * @returns The line with all inline code spans replaced by spaces
+ */
+export function stripInlineCode(line: string): string {
+    return line.replace(/(`+).*?\1/g, (m) => ' '.repeat(m.length));
+}
+
+/**
+ * Finds all YFM/Liquid directive matches (`{% ... %}`) in the document lines,
+ * skipping lines inside code blocks and inline code spans.
+ *
+ * @param params - Rule parameters from markdownlint
+ * @returns Array of directive matches with their directive content, line number, and original line text
+ */
+export function findDirectiveMatches(params: RuleParams): DirectiveMatch[] {
+    const ignoredLines = getIgnoredLineNumbers(params);
+    const directiveRe = /(^|[^\\]){%\s*([^%]+?)\s*%}/g;
+    const matches: DirectiveMatch[] = [];
+
+    params.lines.forEach((line, index) => {
+        const lineNumber = index + 1;
+
+        if (ignoredLines.has(lineNumber)) {
+            return;
+        }
+
+        const stripped = stripInlineCode(line);
+        let match: RegExpExecArray | null;
+        const localRe = new RegExp(directiveRe.source, 'g');
+
+        while ((match = localRe.exec(stripped)) !== null) {
+            matches.push({
+                directive: match[2].trim(),
+                lineNumber,
+                line,
+            });
+        }
+    });
+
+    return matches;
+}
+
+/**
+ * Validates that opening and closing directives are properly paired using a stack.
+ * Reports two types of issues:
+ * - Unexpected closing directive (closing without a matching opening)
+ * - Unclosed opening directive (opening without a matching closing)
+ *
+ * @param params - Rule parameters from markdownlint
+ * @param spec - Pair specification with `open` and `close` regexes tested against the directive content
+ * @returns Array of issues, each with a line number, context (original line), and detail message
+ */
+export function findPairedDirectiveIssues(
+    params: RuleParams,
+    spec: PairedDirectiveSpec,
+): Array<{lineNumber: number; context: string; detail: string}> {
+    const issues: Array<{lineNumber: number; context: string; detail: string}> = [];
+    const stack: DirectiveMatch[] = [];
+
+    for (const match of findDirectiveMatches(params)) {
+        if (spec.open.test(match.directive)) {
+            stack.push(match);
+            continue;
+        }
+
+        if (spec.close.test(match.directive)) {
+            const open = stack.pop();
+
+            if (!open) {
+                issues.push({
+                    lineNumber: match.lineNumber,
+                    context: match.line,
+                    detail: `Unexpected closing directive '{% ${match.directive} %}'`,
+                });
+            }
+        }
+    }
+
+    stack.forEach((unclosed) => {
+        issues.push({
+            lineNumber: unclosed.lineNumber,
+            context: unclosed.line,
+            detail: `Directive '{% ${unclosed.directive} %}' must be closed`,
+        });
+    });
+
+    return issues;
+}
+
+interface StackEntry {
+    match: DirectiveMatch;
+    specIndex: number;
+}
+
+/**
+ * Detects interleaved (improperly nested) directives using a unified stack across all specs.
+ *
+ * Example of interleaved directives:
+ *   {% note info %}
+ *   {% list tabs %}
+ *   {% endnote %}      ← closes note, but tabs is still open inside
+ *   {% endlist %}
+ *
+ * Per-spec stacks cannot detect this because each spec closes cleanly in isolation.
+ * This function uses a single stack for all directive types and reports when a closing
+ * directive skips over unclosed directives of a different type.
+ *
+ * @param params - Rule parameters from markdownlint
+ * @param specs - Array of paired directive specifications
+ * @returns Array of issues with line number, context, and detail message
+ */
+export function findInterleavedDirectiveIssues(
+    params: RuleParams,
+    specs: PairedDirectiveSpec[],
+): Array<{lineNumber: number; context: string; detail: string}> {
+    const issues: Array<{lineNumber: number; context: string; detail: string}> = [];
+    const stack: StackEntry[] = [];
+
+    for (const match of findDirectiveMatches(params)) {
+        const openIndex = specs.findIndex((s) => s.open.test(match.directive));
+
+        if (openIndex !== -1) {
+            stack.push({match, specIndex: openIndex});
+            continue;
+        }
+
+        const closeIndex = specs.findIndex((s) => s.close.test(match.directive));
+
+        if (closeIndex === -1) {
+            continue;
+        }
+
+        let found = -1;
+        for (let i = stack.length - 1; i >= 0; i--) {
+            if (stack[i].specIndex === closeIndex) {
+                found = i;
+                break;
+            }
+        }
+
+        if (found === -1) {
+            continue;
+        }
+
+        for (let i = stack.length - 1; i > found; i--) {
+            const interleaved = stack[i];
+            issues.push({
+                lineNumber: match.lineNumber,
+                context: match.line,
+                detail:
+                    `Interleaved directives: '{% ${match.directive} %}' closes before ` +
+                    `'{% ${interleaved.match.directive} %}' (line ${interleaved.match.lineNumber}) is closed`,
+            });
+        }
+
+        stack.splice(found);
+    }
+
+    return issues;
 }
