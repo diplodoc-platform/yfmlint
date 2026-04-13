@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.4.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.3.3...v1.4.0) (2026-04-13)
+
+
+### Features
+
+* added new rules ([c484106](https://github.com/diplodoc-platform/yfmlint/commit/c484106accbbe4126ba34fb91ed9bc6fe4562707))
+* added rules 19-23 ([a20e134](https://github.com/diplodoc-platform/yfmlint/commit/a20e1347ba688803ffb1da021976739868cfb717))
+* updated rule YFM005 and added rule YFM020 ([97b9383](https://github.com/diplodoc-platform/yfmlint/commit/97b93831cb60361066b5e2eb31677e6f11a21ee5))
+
+
+### Bug Fixes
+
+* added customDirectives ([326eb76](https://github.com/diplodoc-platform/yfmlint/commit/326eb7678305b6c083b23ed24757ba11bee6be47))
+* added findInterleavedDirectiveIssues ([50fa28a](https://github.com/diplodoc-platform/yfmlint/commit/50fa28aa98f8ed823879e62fb6be1c5b8eac3065))
+* configure ESLint to properly handle config files and build directory ([a015d67](https://github.com/diplodoc-platform/yfmlint/commit/a015d6757b2e8d26d0550224020562f181f8664d))
+* fixed rules ([0e28b26](https://github.com/diplodoc-platform/yfmlint/commit/0e28b2620d92d66cc4519a66d8bc41fed7a9b4b7))
+* properly configure ESLint to ignore build directory and config files ([2a6aac8](https://github.com/diplodoc-platform/yfmlint/commit/2a6aac83cb182f0cd180a5299f64e6d64b1b5525))
+* remove console.log statement ([878ba7d](https://github.com/diplodoc-platform/yfmlint/commit/878ba7d53295725d132b24992f8ee2b7b01ea62e))
+* update .eslintignore to properly exclude build directory ([7147d9b](https://github.com/diplodoc-platform/yfmlint/commit/7147d9bb64c87da5ef770534940b7441cbce4014))
+* use correct token types in YFM009 rule ([124c600](https://github.com/diplodoc-platform/yfmlint/commit/124c600c3147a5121a00ff266c2cc55ffe64cd9c))
+* YFM005 -&gt; WARN ([4b95076](https://github.com/diplodoc-platform/yfmlint/commit/4b95076a78a5bc90788c6dcc32f30d21913eef97))
+
 ## [1.3.3](https://github.com/diplodoc-platform/yfmlint/compare/v1.3.2...v1.3.3) (2025-12-04)
 
 
