@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.7.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.6.0...v1.7.0) (2026-04-13)
+
+
+### Features
+
+* added new rules ([2b90bf4](https://github.com/diplodoc-platform/yfmlint/commit/2b90bf48c4b4056871294d39c60c7e7afd9e5775))
+* added rules 19-23 ([81c45f3](https://github.com/diplodoc-platform/yfmlint/commit/81c45f3120e35d72d463265f523b904500ae6ab0))
+
+
+### Bug Fixes
+
+* added customDirectives ([1b9ca14](https://github.com/diplodoc-platform/yfmlint/commit/1b9ca14ac34fc4a2c918acc05fb1893db39cadcf))
+* added findInterleavedDirectiveIssues ([03039ef](https://github.com/diplodoc-platform/yfmlint/commit/03039ef45ddf8c8999a55f28532902d7d0117aaa))
+* fixed rules ([8a77479](https://github.com/diplodoc-platform/yfmlint/commit/8a77479aaff0fb468608b907b4d2115af78fa2a1))
+* fixed tests ([0030a7b](https://github.com/diplodoc-platform/yfmlint/commit/0030a7b5dacd75e710aaaa14774b6804da233d5f))
+* sync package-lock.json with package.json ([dbdd38c](https://github.com/diplodoc-platform/yfmlint/commit/dbdd38c047feda13c856d6f40000b231b8c53da1))
+* sync package-lock.json with package.json ([a15e8a0](https://github.com/diplodoc-platform/yfmlint/commit/a15e8a022a35b54c1e62c9c02eea90d8825862fd))
+* YFM005 -&gt; WARN ([d1ff7b4](https://github.com/diplodoc-platform/yfmlint/commit/d1ff7b4cc50600d7f4bb180c1431d739f8ddb157))
+
 ## [1.6.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.5.0...v1.6.0) (2026-03-23)
 
 
