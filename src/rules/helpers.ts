@@ -243,3 +243,75 @@ export function findPairedDirectiveIssues(
 
     return issues;
 }
+
+interface StackEntry {
+    match: DirectiveMatch;
+    specIndex: number;
+}
+
+/**
+ * Detects interleaved (improperly nested) directives using a unified stack across all specs.
+ *
+ * Example of interleaved directives:
+ *   {% note info %}
+ *   {% list tabs %}
+ *   {% endnote %}      ← closes note, but tabs is still open inside
+ *   {% endlist %}
+ *
+ * Per-spec stacks cannot detect this because each spec closes cleanly in isolation.
+ * This function uses a single stack for all directive types and reports when a closing
+ * directive skips over unclosed directives of a different type.
+ *
+ * @param params - Rule parameters from markdownlint
+ * @param specs - Array of paired directive specifications
+ * @returns Array of issues with line number, context, and detail message
+ */
+export function findInterleavedDirectiveIssues(
+    params: RuleParams,
+    specs: PairedDirectiveSpec[],
+): Array<{lineNumber: number; context: string; detail: string}> {
+    const issues: Array<{lineNumber: number; context: string; detail: string}> = [];
+    const stack: StackEntry[] = [];
+
+    for (const match of findDirectiveMatches(params)) {
+        const openIndex = specs.findIndex((s) => s.open.test(match.directive));
+
+        if (openIndex !== -1) {
+            stack.push({match, specIndex: openIndex});
+            continue;
+        }
+
+        const closeIndex = specs.findIndex((s) => s.close.test(match.directive));
+
+        if (closeIndex === -1) {
+            continue;
+        }
+
+        let found = -1;
+        for (let i = stack.length - 1; i >= 0; i--) {
+            if (stack[i].specIndex === closeIndex) {
+                found = i;
+                break;
+            }
+        }
+
+        if (found === -1) {
+            continue;
+        }
+
+        for (let i = stack.length - 1; i > found; i--) {
+            const interleaved = stack[i];
+            issues.push({
+                lineNumber: match.lineNumber,
+                context: match.line,
+                detail:
+                    `Interleaved directives: '{% ${match.directive} %}' closes before ` +
+                    `'{% ${interleaved.match.directive} %}' (line ${interleaved.match.lineNumber}) is closed`,
+            });
+        }
+
+        stack.splice(found);
+    }
+
+    return issues;
+}
