@@ -12,12 +12,13 @@ export const TABS_STRICT_RE =
     /^list\s+tabs(?:\s+(?:regular|radio|dropdown|accordion))?(?:\s+[A-Za-z0-9_.-]+=[^\s%]+)*$/;
 
 const INCLUDE_RE = /^include(?:\s|$)/;
+export const INCLUDE_STRICT_RE = /^include(?:\s+notitle)?\s+\[[^\]]*]\([^)]+\)$/;
 const INCLUDED_OPEN_RE = /^included\s*\(.+\)$/;
 const INCLUDED_CLOSE_RE = /^endincluded$/;
 const ANCHOR_RE = /^anchor\s+[\w-]+$/;
 const FILE_RE = /^file\s+.+$/;
-const CHANGELOG_OPEN_RE = /^changelog$/;
-const CHANGELOG_CLOSE_RE = /^endchangelog$/;
+export const CHANGELOG_OPEN_RE = /^changelog$/;
+export const CHANGELOG_CLOSE_RE = /^endchangelog$/;
 export const IF_OPEN_RE = /^if\s+.+$/;
 const ELSIF_RE = /^elsif\s+.+$/;
 const ELSE_RE = /^else$/;
