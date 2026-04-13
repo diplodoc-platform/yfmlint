@@ -12,7 +12,7 @@ export default {
     YFM002: LogLevels.WARN, // No header found in the file for the link text
     YFM003: LogLevels.ERROR, // Link is unreachable
     YFM004: LogLevels.ERROR, // Table not closed
-    YFM005: LogLevels.ERROR, // Block not closed
+    YFM005: LogLevels.WARN, // Block not closed
     YFM006: LogLevels.WARN, // Term definition duplicated
     YFM007: LogLevels.WARN, // Term used without definition
     YFM008: LogLevels.WARN, // Term inside definition not allowed
