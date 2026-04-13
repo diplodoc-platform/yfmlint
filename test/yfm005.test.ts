@@ -122,6 +122,65 @@ describe('YFM005', () => {
         ]);
     });
 
+    it('reports interleaved note and tabs', async () => {
+        const input = dedent`
+            {% note info %}
+
+            {% list tabs %}
+
+            {% endnote %}
+
+            {% endlist %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM005: LogLevels.ERROR}})) || [];
+
+        const interleaved = formatErrors(errors).filter((e) => e.includes('Interleaved'));
+        expect(interleaved.length).toBeGreaterThan(0);
+        expect(interleaved[0]).toContain('Interleaved directives');
+        expect(interleaved[0]).toContain('endnote');
+        expect(interleaved[0]).toContain('list tabs');
+    });
+
+    it('reports interleaved cut and if', async () => {
+        const input = dedent`
+            {% cut "Title" %}
+
+            {% if user %}
+
+            {% endcut %}
+
+            {% endif %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM005: LogLevels.ERROR}})) || [];
+
+        const interleaved = formatErrors(errors).filter((e) => e.includes('Interleaved'));
+        expect(interleaved.length).toBeGreaterThan(0);
+        expect(interleaved[0]).toContain('endcut');
+        expect(interleaved[0]).toContain('if user');
+    });
+
+    it('accepts properly nested blocks (no interleaving)', async () => {
+        const input = dedent`
+            {% note info %}
+
+            {% list tabs %}
+
+            {% endlist %}
+
+            {% endnote %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM005: LogLevels.ERROR}})) || [];
+
+        const interleaved = formatErrors(errors).filter((e) => e.includes('Interleaved'));
+        expect(interleaved).toEqual([]);
+    });
+
     it('ignores directives inside inline code', async () => {
         const input = 'Use `{% note tip %}` and `{% endnote %}` in your docs.';
 

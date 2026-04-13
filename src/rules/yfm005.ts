@@ -15,7 +15,7 @@ import {
     TABS_CLOSE_RE,
     TABS_OPEN_RE,
 } from './directives';
-import {findPairedDirectiveIssues} from './helpers';
+import {findInterleavedDirectiveIssues, findPairedDirectiveIssues} from './helpers';
 
 const PAIRED_SPECS = [
     {open: NOTE_OPEN_RE, close: NOTE_CLOSE_RE},
@@ -64,6 +64,14 @@ export const yfm005: Rule = {
                     });
                 });
             }
+
+            findInterleavedDirectiveIssues(params, PAIRED_SPECS).forEach((issue) => {
+                onError({
+                    lineNumber: issue.lineNumber,
+                    detail: issue.detail,
+                    context: issue.context,
+                });
+            });
         }
     },
 };
