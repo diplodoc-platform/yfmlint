@@ -37,6 +37,15 @@ const SYNTAX_CHECKS = [
     },
 ];
 
+function isCustomDirective(directive: string, customDirectives: string[]): boolean {
+    return customDirectives.some((name) => {
+        const openRe = new RegExp(`^${name}(?:\\s|$)`);
+        const closeRe = new RegExp(`^end${name}$`);
+
+        return openRe.test(directive) || closeRe.test(directive);
+    });
+}
+
 export const yfm020: Rule = {
     names: ['YFM020', 'invalid-yfm-directive'],
     description: 'YFM directive is unknown or has invalid syntax',
@@ -48,6 +57,9 @@ export const yfm020: Rule = {
         if (!config) {
             return;
         }
+
+        const customDirectives: string[] =
+            (config as {customDirectives?: string[]}).customDirectives || [];
 
         findDirectiveMatches(params).forEach((match) => {
             // Check syntax of known directive families first
@@ -62,6 +74,11 @@ export const yfm020: Rule = {
                     }
                     return;
                 }
+            }
+
+            // Skip user-defined custom directives
+            if (customDirectives.length && isCustomDirective(match.directive, customDirectives)) {
+                return;
             }
 
             // Check for unknown directives
