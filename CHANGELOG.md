@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.1](https://github.com/diplodoc-platform/yfmlint/compare/v1.7.0...v1.7.1) (2026-04-15)
+
+
+### Bug Fixes
+
+* fixed YFM005 ([02ef9fa](https://github.com/diplodoc-platform/yfmlint/commit/02ef9fa729fd79939f50a61adff682d8053c71bc))
+* fixed YFM005 ([0b966d4](https://github.com/diplodoc-platform/yfmlint/commit/0b966d4e34642b5e8e93db68a9c2b3b140147939))
+
 ## [1.7.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.6.0...v1.7.0) (2026-04-13)
 
 
