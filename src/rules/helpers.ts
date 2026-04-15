@@ -285,6 +285,12 @@ export function getIgnoredLineNumbers(params: RuleParams): Set<number> {
 
     params.parsers.markdownit.tokens.forEach((token) => {
         if ((token.type === 'fence' || token.type === 'code_block') && token.map) {
+            const meta = (token as MarkdownItToken & {meta?: TokenMeta}).meta;
+
+            if (meta?.sourceFile) {
+                return;
+            }
+
             const [start, end] = token.map;
 
             for (let line = start; line < end; line++) {
