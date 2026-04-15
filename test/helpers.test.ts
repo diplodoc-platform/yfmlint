@@ -9,6 +9,7 @@ import {
     findLinksInInlineTokens,
     findYfmLintTokens,
     formatIncludeChain,
+    getIgnoredLineNumbers,
     resolveIncludeSource,
     validateLineNumberAndGetFilePath,
 } from '../src/rules/helpers';
@@ -465,5 +466,46 @@ describe('findYfmLintTokens', () => {
         findYfmLintTokens(params, 'YFM005', onError);
 
         expect(onError).not.toHaveBeenCalled();
+    });
+});
+
+describe('getIgnoredLineNumbers', () => {
+    it('includes lines from local fence tokens', () => {
+        const token = {type: 'fence', map: [2, 5], meta: null} as unknown as MarkdownItToken;
+        const params = makeParams({tokens: [token], lines: ['a', 'b', 'c', 'd', 'e', 'f']});
+
+        const ignored = getIgnoredLineNumbers(params);
+
+        expect(ignored).toEqual(new Set([3, 4, 5]));
+    });
+
+    it('skips fence tokens from included files', () => {
+        const token = {
+            type: 'fence',
+            map: [2, 5],
+            meta: {sourceFile: '_includes/inc.md', includeChain: [{file: 'main.md', line: 10}]},
+        } as unknown as MarkdownItToken;
+        const params = makeParams({tokens: [token], lines: ['a', 'b', 'c', 'd', 'e', 'f']});
+
+        const ignored = getIgnoredLineNumbers(params);
+
+        expect(ignored).toEqual(new Set());
+    });
+
+    it('does not confuse local and included fence tokens', () => {
+        const localFence = {type: 'fence', map: [0, 3], meta: null} as unknown as MarkdownItToken;
+        const includedFence = {
+            type: 'fence',
+            map: [4, 7],
+            meta: {sourceFile: '_includes/code.md'},
+        } as unknown as MarkdownItToken;
+        const params = makeParams({
+            tokens: [localFence, includedFence],
+            lines: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
+        });
+
+        const ignored = getIgnoredLineNumbers(params);
+
+        expect(ignored).toEqual(new Set([1, 2, 3]));
     });
 });
