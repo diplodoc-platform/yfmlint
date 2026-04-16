@@ -1,6 +1,6 @@
 export const NOTE_OPEN_RE = /^note(?:\s|$)/;
 export const NOTE_CLOSE_RE = /^endnote$/;
-export const NOTE_STRICT_RE = /^note\s+(?:alert|info|tip|warning)(?:\s+"[^"]*")?$/;
+export const NOTE_STRICT_RE = /^note\s+(?:alert|info|tip|warning)(?:\s+".*")?$/;
 
 export const CUT_OPEN_RE = /^cut(?:\s|$)/;
 export const CUT_CLOSE_RE = /^endcut$/;
