@@ -79,6 +79,21 @@ describe('YFM020', () => {
         expect(formatErrors(errors).filter((e) => e.includes('YFM020'))).toEqual([]);
     });
 
+    it('accepts note with quoted title containing inner quotes', async () => {
+        const input = dedent`
+            {% note info "Предотвращение "колебаний" качества" %}
+
+            Body.
+
+            {% endnote %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM020: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors).filter((e) => e.includes('YFM020'))).toEqual([]);
+    });
+
     it('does not report valid known directives', async () => {
         const input = dedent`
             {% note tip %}
