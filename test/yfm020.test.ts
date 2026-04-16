@@ -79,6 +79,51 @@ describe('YFM020', () => {
         expect(formatErrors(errors).filter((e) => e.includes('YFM020'))).toEqual([]);
     });
 
+    it('accepts cut with percent sign in title', async () => {
+        const input = dedent`
+            {% cut "**Почему ставка 6%, а не 4%?**" %}
+
+            Body.
+
+            {% endcut %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM020: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors).filter((e) => e.includes('YFM020'))).toEqual([]);
+    });
+
+    it('accepts note with percent sign in title', async () => {
+        const input = dedent`
+            {% note info "Важно: скидка 50%!" %}
+
+            Body.
+
+            {% endnote %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM020: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors).filter((e) => e.includes('YFM020'))).toEqual([]);
+    });
+
+    it('accepts cut with curly braces in title', async () => {
+        const input = dedent`
+            {% cut "Объект {key: value}" %}
+
+            Body.
+
+            {% endcut %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM020: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors).filter((e) => e.includes('YFM020'))).toEqual([]);
+    });
+
     it('accepts note with quoted title containing inner quotes', async () => {
         const input = dedent`
             {% note info "Предотвращение "колебаний" качества" %}
@@ -145,5 +190,37 @@ describe('YFM020', () => {
             (await yfmlint(input, 'test.md', {lintConfig: {YFM020: LogLevels.ERROR}})) || [];
 
         expect(formatErrors(errors)).toEqual([]);
+    });
+});
+
+describe('YFM005 – percent sign in directive title', () => {
+    it('does not report unclosed block when cut title contains percent', async () => {
+        const input = dedent`
+            {% cut "**Почему ставка 6%, а не 4%?**" %}
+
+            Body.
+
+            {% endcut %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM005: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors).filter((e) => e.includes('YFM005'))).toEqual([]);
+    });
+
+    it('does not report unclosed block when note title contains percent', async () => {
+        const input = dedent`
+            {% note info "Скидка 50%!" %}
+
+            Body.
+
+            {% endnote %}
+        `;
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM005: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors).filter((e) => e.includes('YFM005'))).toEqual([]);
     });
 });

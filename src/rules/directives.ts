@@ -9,7 +9,7 @@ export const CUT_STRICT_RE = /^cut\s+["'].+["']$/;
 export const TABS_OPEN_RE = /^list\s+tabs(?:\s|$)/;
 export const TABS_CLOSE_RE = /^endlist$/;
 export const TABS_STRICT_RE =
-    /^list\s+tabs(?:\s+(?:regular|radio|dropdown|accordion))?(?:\s+[A-Za-z0-9_.-]+=[^\s%]+)*$/;
+    /^list\s+tabs(?:\s+(?:regular|radio|dropdown|accordion))?(?:\s+[A-Za-z0-9_.-]+=[^\s]+)*$/;
 
 const INCLUDE_RE = /^include(?:\s|$)/;
 export const INCLUDE_STRICT_RE = /^include(?:\s+notitle)?\s+\[[^\]]*]\([^)]+\)$/;
