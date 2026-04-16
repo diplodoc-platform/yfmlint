@@ -323,7 +323,7 @@ export function stripInlineCode(line: string): string {
  */
 export function findDirectiveMatches(params: RuleParams): DirectiveMatch[] {
     const ignoredLines = getIgnoredLineNumbers(params);
-    const directiveRe = /(^|[^\\]){%\s*([^%]+?)\s*%}/g;
+    const directiveRe = /(^|[^\\]){%\s*((?:[^%]|%(?!}))+?)\s*%}/g;
     const matches: DirectiveMatch[] = [];
 
     params.lines.forEach((line, index) => {
