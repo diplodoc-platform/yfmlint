@@ -31,6 +31,7 @@ export interface Options {
     pluginOptions?: Record<string, unknown>;
     lintConfig?: RawLintConfig;
     frontMatter?: RegExp | null;
+    trimPageConstructor?: boolean;
 }
 
 export interface Logger {
