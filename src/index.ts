@@ -36,14 +36,23 @@ export async function yfmlint(
     } = opts;
 
     // Trim page-constructor blocks before linting — markdownlint doesn't know about them.
-    // Replace matched regions with empty lines to preserve line numbering.
+    // Wrap replacement in markdownlint-disable/enable to suppress rules (e.g. MD012)
+    // on the blank lines that preserve line numbering.
     if (trimPageConstructor) {
         const PAGE_CONSTRUCTOR_REGEX = /^::: page-constructor\r?\n[\s\S]*?\r?\n:::(?:\r?\n|$)/gm;
 
         content = content.replace(PAGE_CONSTRUCTOR_REGEX, (match) => {
             const lineCount = match.split(/\r?\n/).length - 1;
 
-            return '\n'.repeat(lineCount);
+            if (lineCount <= 2) {
+                return '<!-- markdownlint-disable -->\n<!-- markdownlint-enable -->\n';
+            }
+
+            return (
+                '<!-- markdownlint-disable -->\n' +
+                '\n'.repeat(lineCount - 2) +
+                '<!-- markdownlint-enable -->\n'
+            );
         });
     }
 
