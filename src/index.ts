@@ -31,8 +31,21 @@ export async function yfmlint(
         plugins: customPlugins = [],
         pluginOptions = {},
         frontMatter = null,
+        trimPageConstructor = true,
         lintConfig = {},
     } = opts;
+
+    // Trim page-constructor blocks before linting — markdownlint doesn't know about them.
+    // Replace matched regions with empty lines to preserve line numbering.
+    if (trimPageConstructor) {
+        const PAGE_CONSTRUCTOR_REGEX = /^::: page-constructor\r?\n[\s\S]*?\r?\n:::(?:\r?\n|$)/gm;
+
+        content = content.replace(PAGE_CONSTRUCTOR_REGEX, (match) => {
+            const lineCount = match.split(/\r?\n/).length - 1;
+
+            return '\n'.repeat(lineCount);
+        });
+    }
 
     // Signal to plugins that this is a lint run (not a transform run)
     // Plugins from @diplodoc/transform use this flag to create __yfm_lint tokens

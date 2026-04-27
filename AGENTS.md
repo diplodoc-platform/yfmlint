@@ -155,6 +155,7 @@ const errors = await yfmlint(content, path, {
   plugins: [termPlugin], // Optional: YFM plugins
   pluginOptions: {}, // Optional: plugin options
   frontMatter: null, // Optional: front matter regex
+  trimPageConstructor = true, // Optional: flag for trimming page constructor blocks
 });
 
 if (errors) {
@@ -216,6 +217,7 @@ async function yfmlint(
   - `pluginOptions` — optional object passed to plugins
   - `lintConfig` — optional custom lint configuration (merged with defaults)
   - `frontMatter` — optional regex for front matter detection
+  - `trimPageConstructor` - optional flag for trimming page constructor blocks
 
 **Returns**: Array of `LintError` objects or `undefined` if no errors
 
