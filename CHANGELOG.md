@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.5](https://github.com/diplodoc-platform/yfmlint/compare/v1.7.4...v1.7.5) (2026-04-27)
+
+
+### Bug Fixes
+
+* trimming pc blocks ([5aa4abc](https://github.com/diplodoc-platform/yfmlint/commit/5aa4abc004eb8af0cc1e2a0c3baa7705170d8b7a))
+* trimming pc blocks ([1c256ab](https://github.com/diplodoc-platform/yfmlint/commit/1c256abe3930077f6f0552ef4759652ca8b8b9f9))
+
 ## [1.7.4](https://github.com/diplodoc-platform/yfmlint/compare/v1.7.3...v1.7.4) (2026-04-27)
 
 
