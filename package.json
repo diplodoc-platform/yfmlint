@@ -62,6 +62,6 @@
     "typescript": "5.9.3",
     "vite": "^6.2.1",
     "vitest": "^3.0.8",
-    "@diplodoc/infra": "2.0.0"
+    "@diplodoc/infra": "2.0.1"
   }
 }
