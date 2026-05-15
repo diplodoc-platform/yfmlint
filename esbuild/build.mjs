@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import {build} from '@diplodoc/lint/esbuild';
+import {build} from '@diplodoc/infra/esbuild';
 
 import tsconfigJson from '../tsconfig.json' with {type: 'json'};
 
