@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.7.6](https://github.com/diplodoc-platform/yfmlint/compare/v1.7.5...v1.7.6) (2026-05-28)
+
+
+### Bug Fixes
+
+* bootstrap ([93fbc01](https://github.com/diplodoc-platform/yfmlint/commit/93fbc0182640c83fdff88802d158c45a55e02ad6))
+* **deps:** updated node to 24 ([0df0eb1](https://github.com/diplodoc-platform/yfmlint/commit/0df0eb158c613c116601f0f7a4fe17b61b008180))
+* **deps:** updated node to 24 ([fa781a0](https://github.com/diplodoc-platform/yfmlint/commit/fa781a0d6b61524abcd67045814bb0051cbbe39c))
+
 ## [1.7.5](https://github.com/diplodoc-platform/yfmlint/compare/v1.7.4...v1.7.5) (2026-04-27)
 
 
