@@ -50,7 +50,6 @@
   },
   "devDependencies": {
     "@diplodoc/transform": "^4.48.4",
-    "@diplodoc/tsconfig": "^1.0.2",
     "@types/lodash": "^4.17.15",
     "@types/markdown-it": "^13.0.9",
     "@types/markdown-it-attrs": "^4.1.3",
