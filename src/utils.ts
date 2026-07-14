@@ -62,11 +62,19 @@ export function normalizeConfig(...parts: RawLintConfig[]) {
                     loglevel: part[key] as LogLevels,
                 };
             } else if (part[key] && typeof part[key] === 'object') {
-                // Object config: merge with loglevel from 'level' property or default
+                // Object config: keep extra rule fields (e.g. YFM001.maximum) and
+                // resolve the level. Read the input `level`, fall back to an
+                // already-normalized `loglevel` (so normalizeConfig stays idempotent
+                // when called on its own output), then to the default. The source
+                // `level` is dropped so the result carries a single `loglevel` field.
+                const {level, loglevel, ...rest} = part[key] as {
+                    level?: LogLevels;
+                    loglevel?: LogLevels;
+                    [x: string]: unknown;
+                };
                 result[key] = {
-                    ...(part[key] as object),
-                    // @ts-ignore
-                    loglevel: part[key].level || DEFAULT_LOG_LEVEL,
+                    ...rest,
+                    loglevel: level || loglevel || DEFAULT_LOG_LEVEL,
                 };
             }
 
