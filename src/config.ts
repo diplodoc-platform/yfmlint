@@ -21,4 +21,5 @@ export default {
     YFM011: LogLevels.WARN, // Max svg size
     YFM018: LogLevels.INFO, // Term definition from include
     YFM020: LogLevels.WARN, // Unknown or invalid YFM directive
+    YFM021: LogLevels.ERROR, // Non-BMP (UTF-16 surrogate pair) character breaks layout
 };
