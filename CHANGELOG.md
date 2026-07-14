@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.7](https://github.com/diplodoc-platform/yfmlint/compare/v1.7.6...v1.7.7) (2026-07-14)
+
+
+### Bug Fixes
+
+* **yfmlint:** keep error level after double normalization [#5243](https://github.com/diplodoc-platform/yfmlint/issues/5243) ([c6ae569](https://github.com/diplodoc-platform/yfmlint/commit/c6ae5692f684f3610e8229f8d941f088fd27122e))
+
 ## [1.7.6](https://github.com/diplodoc-platform/yfmlint/compare/v1.7.5...v1.7.6) (2026-05-28)
 
 
