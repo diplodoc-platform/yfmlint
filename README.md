@@ -224,7 +224,20 @@ Validates that links to autotitle anchors reference existing titles.
 
 ### YFM011 - Max SVG size
 
-**Tags:** `image_svg`  
+**Tags:** `image_svg`
 **Aliases:** `max-svg-size`
 
 Validates that SVG images don't exceed the maximum size limit. Requires image processing plugins from `@diplodoc/transform`.
+
+### YFM021 - Non-BMP (UTF-16 surrogate pair) character
+
+**Tags:** `encoding`, `utf16`
+**Aliases:** `no-non-bmp-characters`
+
+Detects characters outside the Unicode Basic Multilingual Plane (code point > `U+FFFF`). Such characters are encoded as UTF-16 surrogate pairs (e.g. emoji, rare CJK ideographs, mathematical alphanumeric symbols) and are known to break layout in some browsers. Reported as an error by default so that these characters do not reach production.
+
+**Example:**
+
+```markdown
+Hello 😀 world
+```
