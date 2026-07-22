@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.7.7...v1.8.0) (2026-07-22)
+
+
+### Features
+
+* **yfmlint:** detect non-BMP (UTF-16) characters [#367](https://github.com/diplodoc-platform/yfmlint/issues/367) ([0f61b86](https://github.com/diplodoc-platform/yfmlint/commit/0f61b866dfad4d36978e9d829433715b03f8131a))
+
 ## [1.7.7](https://github.com/diplodoc-platform/yfmlint/compare/v1.7.6...v1.7.7) (2026-07-14)
 
 
