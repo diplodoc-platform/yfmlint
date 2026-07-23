@@ -60,12 +60,12 @@ describe('YFM021', () => {
         expect(formatErrors(errors).filter((e) => e.includes('YFM021'))).toEqual([]);
     });
 
-    it('is enabled by default as an error', async () => {
+    it('is enabled by default as a warning', async () => {
         const input = 'Emoji 😀';
 
         const errors = (await yfmlint(input, 'test.md', {lintConfig: {}})) || [];
 
-        const logs = errors.filter((error) => error.level === LogLevels.ERROR);
+        const logs = errors.filter((error) => error.level === LogLevels.WARN);
 
         expect(logs).toHaveLength(1);
     });
