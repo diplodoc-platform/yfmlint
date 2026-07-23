@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.8.0...v1.9.0) (2026-07-23)
+
+
+### Features
+
+* **yfmlint:** detect non-BMP (UTF-16) characters, set LogLevel = warn [[#367](https://github.com/diplodoc-platform/yfmlint/issues/367)] ([1d69223](https://github.com/diplodoc-platform/yfmlint/commit/1d6922342c21ed53f44b03d39bb2f483d64b089a))
+
 ## [1.8.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.7.7...v1.8.0) (2026-07-22)
 
 
