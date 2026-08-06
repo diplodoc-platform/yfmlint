@@ -3,9 +3,9 @@
   "compilerOptions": {
     "lib": ["es2018"],
     "outDir": "lib",
-    "module": "commonjs",
-    "baseUrl": ".",
-    "target": "ES2018"
+    "module": "preserve",
+    "target": "ES2018",
+    "moduleResolution": "bundler"
   },
   "include": ["src/**/*", "test/**/*"]
 }
