@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.1](https://github.com/diplodoc-platform/yfmlint/compare/v1.9.0...v1.9.1) (2026-08-07)
+
+
+### Bug Fixes
+
+* Upgrade typescript to 5.9.3 DOCSTOOLS-6357 ([4e11702](https://github.com/diplodoc-platform/yfmlint/commit/4e11702f3d8bd782ba4987a559ad5ee7f28e5eca))
+* Upgrade typescript to 6.0.3 DOCSTOOLS-6359 ([e574f6e](https://github.com/diplodoc-platform/yfmlint/commit/e574f6ec20e886dcfc638a5a723d52d402e910fb))
+
 ## [1.9.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.8.0...v1.9.0) (2026-07-23)
 
 
