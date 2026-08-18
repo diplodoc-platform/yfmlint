@@ -1,32 +1,17 @@
 import type {Rule} from 'markdownlint';
+import type {TokenWithAttrs} from '../typings';
 
 /**
- * Formats a character as its Unicode code point notation, e.g. "U+1F600".
+ * YFM021 - Empty automatic heading anchor.
  *
- * @param char - A single Unicode character (may be a surrogate pair)
- * @returns Code point in "U+XXXX" notation
- */
-function toCodePoint(char: string): string {
-    const codePoint = char.codePointAt(0) || 0;
-
-    return 'U+' + codePoint.toString(16).toUpperCase().padStart(4, '0');
-}
-
-/**
- * YFM021 - Non-BMP (UTF-16 surrogate pair) character.
- *
- * Detects characters outside the Unicode Basic Multilingual Plane
- * (code point > U+FFFF). In UTF-16 such characters are encoded as
- * surrogate pairs and are known to break layout in some browsers.
- *
- * The rule scans every line (iterating by code point, so surrogate pairs
- * are treated as a single character) and reports each occurrence so that
- * these characters do not reach production.
+ * Detects headings for which the anchors plugin could not generate a
+ * non-empty automatic anchor. The plugin marks such heading tokens during
+ * lint runs so this rule does not need to duplicate slug generation.
  */
 export const yfm021: Rule = {
-    names: ['YFM021', 'no-non-bmp-characters'],
-    description: 'UTF-16 surrogate-pair character may break layout in some browsers',
-    tags: ['encoding', 'utf16'],
+    names: ['YFM021', 'empty-auto-heading-anchor'],
+    description: 'Automatic heading anchor is empty',
+    tags: ['titles'],
     parser: 'markdownit',
     function: function YFM021(params, onError) {
         const {config} = params;
@@ -34,27 +19,22 @@ export const yfm021: Rule = {
             return;
         }
 
-        params.lines.forEach((line, index) => {
-            let column = 0;
-
-            // Iterating a string with for..of yields code points,
-            // so a surrogate pair is handled as a single character.
-            for (const char of line) {
-                column += 1;
-
-                const codePoint = char.codePointAt(0) || 0;
-
-                if (codePoint > 0xffff) {
-                    onError({
-                        lineNumber: index + 1,
-                        detail:
-                            `Character ${toCodePoint(char)} '${char}' is outside the Basic ` +
-                            `Multilingual Plane (UTF-16 surrogate pair) at column ${column} ` +
-                            `and may break layout in some browsers`,
-                        context: line,
-                    });
-                }
+        for (const token of params.parsers.markdownit.tokens) {
+            if (token.type !== 'heading_open') {
+                continue;
             }
-        });
+
+            const heading = token as TokenWithAttrs;
+
+            if (heading.attrGet('YFM021')) {
+                onError({
+                    lineNumber: heading.lineNumber,
+                    detail:
+                        'Automatic anchor cannot be generated from the heading text; ' +
+                        'add an explicit anchor such as {#section-id}',
+                    context: heading.line,
+                });
+            }
+        }
     },
 };

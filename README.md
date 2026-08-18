@@ -229,15 +229,23 @@ Validates that links to autotitle anchors reference existing titles.
 
 Validates that SVG images don't exceed the maximum size limit. Requires image processing plugins from `@diplodoc/transform`.
 
-### YFM021 - Non-BMP (UTF-16 surrogate pair) character
+### YFM021 - Empty automatic heading anchor
 
-**Tags:** `encoding`, `utf16`
-**Aliases:** `no-non-bmp-characters`
+**Tags:** `titles`
+**Aliases:** `empty-auto-heading-anchor`
 
-Detects characters outside the Unicode Basic Multilingual Plane (code point > `U+FFFF`). Such characters are encoded as UTF-16 surrogate pairs (e.g. emoji, rare CJK ideographs, mathematical alphanumeric symbols) and are known to break layout in some browsers. Reported as an error by default so that these characters do not reach production.
+Detects headings for which the anchors plugin from `@diplodoc/transform` cannot generate a non-empty automatic anchor. The rule is reported as a warning by default. Add an explicit anchor to make the heading addressable.
 
-**Example:**
+The anchors plugin must be passed to `yfmlint()` for this rule to work. Diplodoc CLI and the VS Code extension already provide it.
+
+**Invalid:**
 
 ```markdown
-Hello 😀 world
+## 😀
+```
+
+**Fix:**
+
+```markdown
+## 😀 {#emoji-section}
 ```
