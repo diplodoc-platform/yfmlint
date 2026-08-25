@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.2](https://github.com/diplodoc-platform/yfmlint/compare/v1.9.1...v1.9.2) (2026-08-25)
+
+
+### Bug Fixes
+
+* fixed directive regex ([#85](https://github.com/diplodoc-platform/yfmlint/issues/85)) ([88aaddd](https://github.com/diplodoc-platform/yfmlint/commit/88aaddd4f83d12e072121641328047c2a877f8fe))
+
 ## [1.9.1](https://github.com/diplodoc-platform/yfmlint/compare/v1.9.0...v1.9.1) (2026-08-07)
 
 
