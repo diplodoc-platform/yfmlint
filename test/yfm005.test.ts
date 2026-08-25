@@ -106,6 +106,15 @@ describe('YFM005', () => {
         expect(formatErrors(errors)).toEqual([]);
     });
 
+    it('accepts adjacent inline if blocks', async () => {
+        const input = 'before {% if a %}A{% endif %}{% if b %}B{% endif %} after';
+
+        const errors =
+            (await yfmlint(input, 'test.md', {lintConfig: {YFM005: LogLevels.ERROR}})) || [];
+
+        expect(formatErrors(errors)).toEqual([]);
+    });
+
     it('reports unclosed changelog block', async () => {
         const input = dedent`
             {% changelog %}
