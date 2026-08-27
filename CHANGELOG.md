@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.3](https://github.com/diplodoc-platform/yfmlint/compare/v1.9.2...v1.9.3) (2026-08-27)
+
+
+### Bug Fixes
+
+* **deps:** Update dev:@diplodoc/transform@4.77.15 ([3a44a4f](https://github.com/diplodoc-platform/yfmlint/commit/3a44a4f3c18cde870d4956455ba2fc7fa3ff3b8b))
+
 ## [1.9.2](https://github.com/diplodoc-platform/yfmlint/compare/v1.9.1...v1.9.2) (2026-08-25)
 
 
