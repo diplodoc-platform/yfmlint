@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@diplodoc/infra": "2.2.3",
-    "@diplodoc/transform": "^4.48.4",
+    "@diplodoc/transform": "^4.77.15",
     "@types/lodash": "^4.17.15",
     "@types/markdown-it": "^13.0.9",
     "@types/markdown-it-attrs": "^4.1.3",
