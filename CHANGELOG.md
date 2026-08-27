@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.4](https://github.com/diplodoc-platform/yfmlint/compare/v1.9.3...v1.9.4) (2026-08-27)
+
+
+### Bug Fixes
+
+* **yfmlint:** utf16 in headers [#6545](https://github.com/diplodoc-platform/yfmlint/issues/6545) ([1f9afd9](https://github.com/diplodoc-platform/yfmlint/commit/1f9afd91cba7879f308b3e0c3c6f7043eaea7ded))
+
 ## [1.9.3](https://github.com/diplodoc-platform/yfmlint/compare/v1.9.2...v1.9.3) (2026-08-27)
 
 
