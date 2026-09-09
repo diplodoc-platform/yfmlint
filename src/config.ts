@@ -22,4 +22,5 @@ export default {
     YFM018: LogLevels.INFO, // Term definition from include
     YFM020: LogLevels.WARN, // Unknown or invalid YFM directive
     YFM021: LogLevels.WARN, // Empty automatic heading anchor
+    YFM023: LogLevels.ERROR, // Invalid visibility audience
 };

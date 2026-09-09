@@ -15,7 +15,7 @@ YFM (Yandex Flavored Markdown) syntax linter with custom rules for Diplodoc plat
 
 ## Features
 
-- **11 custom YFM rules** (YFM001-YFM011) for validating YFM-specific syntax
+- **Custom YFM rules** for validating YFM-specific syntax
 - **Integration with markdownlint** - all standard markdownlint rules are available
 - **Plugin support** - integrates with plugins from `@diplodoc/transform` (e.g., `term` plugin)
 - **Configurable rule levels** - error, warn, info, or disabled
@@ -97,7 +97,7 @@ For detailed information about architecture, development, and contributing, see 
 
 ## YFM Rules
 
-This package extends markdownlint with 11 custom rules for YFM syntax validation. All standard [markdownlint rules](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md) are also available.
+This package extends markdownlint with custom rules for YFM syntax validation. All standard [markdownlint rules](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md) are also available.
 
 ### YFM001 - Inline code line length
 
@@ -248,4 +248,32 @@ The anchors plugin must be passed to `yfmlint()` for this rule to work. Diplodoc
 
 ```markdown
 ## 😀 {#emoji-section}
+```
+
+### YFM023 - Invalid visibility audience
+
+**Tags:** `directives`
+**Aliases:** `invalid-visibility-audience`
+
+Validates that every `visibility` block selects exactly one supported audience. The rule is
+reported as an error by default so a typo cannot silently hide published content.
+
+**Valid:**
+
+```markdown
+:::visibility human
+Human-only content.
+:::
+
+:::visibility agent
+Agent-only content.
+:::
+```
+
+**Invalid:**
+
+```markdown
+:::visibility agents
+This block uses an unsupported plural value.
+:::
 ```
