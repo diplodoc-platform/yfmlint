@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.10.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.9.4...v1.10.0) (2026-09-15)
+
+
+### Features
+
+* validate visibility audiences ([2060756](https://github.com/diplodoc-platform/yfmlint/commit/2060756eda55400f98939bfbd8ac745690b0b06d))
+
+
+### Bug Fixes
+
+* **yfmlint:** align visibility validation with parser DOCSTOOLS-6553 ([66df025](https://github.com/diplodoc-platform/yfmlint/commit/66df0250cd1bd008a4cd76b84db4d0b5c9b9fad0))
+
 ## [1.9.4](https://github.com/diplodoc-platform/yfmlint/compare/v1.9.3...v1.9.4) (2026-08-27)
 
 
