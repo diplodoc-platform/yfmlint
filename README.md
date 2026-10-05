@@ -277,3 +277,20 @@ Agent-only content.
 This block uses an unsupported plural value.
 :::
 ```
+
+### YFM024 - Missing local link anchor
+
+**Tags:** `links`
+**Aliases:** `missing-local-anchor`
+
+Reports a local link fragment that is absent from the rendered target document. The CLI
+provides the `YFM024` link attribute after checking rendered anchor IDs. The rule is a warning
+by default and is configured independently of `YFM002`. A missing target document is
+reported by `YFM003` instead.
+
+```yaml
+YFM024: warn
+```
+
+Set `YFM024: error` to make missing local anchors fail a build, or `YFM024: false` to disable
+the rule. Inline `markdownlint-disable YFM024` comments also suppress this diagnostic.

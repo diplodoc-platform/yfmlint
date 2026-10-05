@@ -23,4 +23,5 @@ export default {
     YFM020: LogLevels.WARN, // Unknown or invalid YFM directive
     YFM021: LogLevels.WARN, // Empty automatic heading anchor
     YFM023: LogLevels.ERROR, // Invalid visibility audience
+    YFM024: LogLevels.WARN, // Missing local link anchor
 };

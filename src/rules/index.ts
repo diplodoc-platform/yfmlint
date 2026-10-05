@@ -13,3 +13,4 @@ export {yfm018} from './yfm018';
 export {yfm020} from './yfm020';
 export {yfm021} from './yfm021';
 export {yfm023} from './yfm023';
+export {yfm024} from './yfm024';
