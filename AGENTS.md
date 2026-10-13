@@ -479,11 +479,9 @@ npm run test:watch
 
 ### Adding a New Rule
 
-YFM024 consumes the transform anchors plugin's `YFM024` heading token marker.
-Keep its default level WARN, preserve configuration overrides and source line/context,
-and validate it against the updated transform plugin as well as synthetic markers.
-Older transform versions do not emit the marker; no rule-side slug parser or
-legacy Markdownlint parser replacement should be added to compensate.
+YFM024 reads the transform's empty shorthand-ID marker and defaults to WARN.
+Preserve arbitrary boolean attributes, configuration overrides and source context.
+Validate the actual updated plugin as well as synthetic markers; older plugins emit no marker.
 
 1. Create rule file in `src/rules/yfmXXX.ts`
 2. Follow the `Rule` interface pattern
