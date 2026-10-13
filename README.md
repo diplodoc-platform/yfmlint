@@ -250,6 +250,28 @@ The anchors plugin must be passed to `yfmlint()` for this rule to work. Diplodoc
 ## 😀 {#emoji-section}
 ```
 
+### YFM024 - Ambiguous whitespace in a custom heading anchor
+
+**Tags:** `titles`
+**Aliases:** `malformed-custom-heading-anchor`
+
+Warns about shorthand heading IDs with a space after `#` or bare words in the
+attribute block, such as `{# section-id}` and `{#YP Service Discovery interaction}`.
+Use `{#section-id}` instead. Spaces around a valid entry (`{ #section-id }`),
+classes, and key/value attributes including quoted values are supported.
+
+The default level is **WARN**, not ERROR; the warning does not itself fail a build.
+It can be disabled or promoted through the usual lint configuration.
+
+Rendering falls back to the automatic anchor for an empty parsed ID. A multi-word
+shorthand ID uses its first word (`YP` in the example); links to the accidental old
+automatic URL must be migrated. The rule relies on the `YFM024` token marker from
+the updated transform anchors plugin (transform PR #1086); older plugins continue
+to work but cannot emit this warning. Publishing yfmlint alone does not activate
+the warning without that transform version. Pass the anchors plugin to `yfmlint()`.
+Diplodoc CLI bundles yfmlint into its binary: publish both packages, then rebuild
+and release CLI with the updated yfmlint to expose this warning in a published CLI.
+
 ### YFM023 - Invalid visibility audience
 
 **Tags:** `directives`
