@@ -1,10 +1,10 @@
 import type {Rule} from 'markdownlint';
 import type {TokenWithAttrs} from '../typings';
 
-/** Report ambiguous shorthand heading IDs marked by the transform anchors plugin. */
+/** Report empty shorthand heading IDs marked by the transform anchors plugin. */
 export const yfm024: Rule = {
-    names: ['YFM024', 'malformed-custom-heading-anchor'],
-    description: 'Custom heading anchor has ambiguous whitespace',
+    names: ['YFM024', 'empty-custom-heading-anchor'],
+    description: 'Custom shorthand heading anchor is empty',
     tags: ['titles'],
     parser: 'markdownit',
     function: function YFM024(params, onError) {
@@ -20,8 +20,8 @@ export const yfm024: Rule = {
                 onError({
                     lineNumber: heading.lineNumber,
                     detail:
-                        'Use {#section-id} without a space after # or bare words in the ID; ' +
-                        'an empty ID falls back to an automatic anchor, while a multi-word ID uses its first word',
+                        'Use {#section-id} without a space immediately after #; ' +
+                        'an empty ID falls back to an automatic anchor',
                     context: heading.line,
                 });
             }

@@ -250,22 +250,23 @@ The anchors plugin must be passed to `yfmlint()` for this rule to work. Diplodoc
 ## 😀 {#emoji-section}
 ```
 
-### YFM024 - Ambiguous whitespace in a custom heading anchor
+### YFM024 - Empty shorthand heading anchor
 
 **Tags:** `titles`
-**Aliases:** `malformed-custom-heading-anchor`
+**Aliases:** `empty-custom-heading-anchor`
 
-Warns about shorthand heading IDs with a space after `#` or bare words in the
-attribute block, such as `{# section-id}` and `{#YP Service Discovery interaction}`.
+Warns when the shorthand ID is empty, such as `{# section-id}` or `{#}`.
 Use `{#section-id}` instead. Spaces around a valid entry (`{ #section-id }`),
-classes, and key/value attributes including quoted values are supported.
+classes, quoted values and arbitrary boolean attributes are supported.
+For example, `{#id hidden}`, `{#id data-x}` and `{#id custom-flag}` do not warn.
+Bare words after the ID are parsed as boolean attributes; the rule does not guess
+whether the author intended a multi-word ID or remove these attributes.
 
 The default level is **WARN**, not ERROR; the warning does not itself fail a build.
 It can be disabled or promoted through the usual lint configuration.
 
-Rendering falls back to the automatic anchor for an empty parsed ID. A multi-word
-shorthand ID uses its first word (`YP` in the example); links to the accidental old
-automatic URL must be migrated. The rule relies on the `YFM024` token marker from
+Rendering falls back to the automatic anchor for an empty parsed ID.
+The rule relies on the `YFM024` token marker from
 the updated transform anchors plugin (transform PR #1086); older plugins continue
 to work but cannot emit this warning. Publishing yfmlint alone does not activate
 the warning without that transform version. Pass the anchors plugin to `yfmlint()`.
