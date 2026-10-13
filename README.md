@@ -255,7 +255,8 @@ The anchors plugin must be passed to `yfmlint()` for this rule to work. Diplodoc
 **Tags:** `titles`
 **Aliases:** `empty-custom-heading-anchor`
 
-Warns when the shorthand ID is empty, such as `{# section-id}` or `{#}`.
+Warns when the shorthand ID in the final heading attribute block is empty,
+such as `{# section-id}` or `{#}`. Attribute-like text elsewhere does not warn.
 Use `{#section-id}` instead. Spaces around a valid entry (`{ #section-id }`),
 classes, quoted values and arbitrary boolean attributes are supported.
 For example, `{#id hidden}`, `{#id data-x}` and `{#id custom-flag}` do not warn.
@@ -266,12 +267,8 @@ The default level is **WARN**, not ERROR; the warning does not itself fail a bui
 It can be disabled or promoted through the usual lint configuration.
 
 Rendering falls back to the automatic anchor for an empty parsed ID.
-The rule relies on the `YFM024` token marker from
-the updated transform anchors plugin (transform PR #1086); older plugins continue
-to work but cannot emit this warning. Publishing yfmlint alone does not activate
-the warning without that transform version. Pass the anchors plugin to `yfmlint()`.
-Diplodoc CLI bundles yfmlint into its binary: publish both packages, then rebuild
-and release CLI with the updated yfmlint to expose this warning in a published CLI.
+Pass a transform anchors plugin that emits the `YFM024` token marker to `yfmlint()`.
+Older plugins without this marker continue to work but cannot emit this warning.
 
 ### YFM023 - Invalid visibility audience
 

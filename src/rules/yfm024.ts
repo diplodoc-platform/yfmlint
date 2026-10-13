@@ -20,7 +20,7 @@ export const yfm024: Rule = {
                 onError({
                     lineNumber: heading.lineNumber,
                     detail:
-                        'Use {#section-id} without a space immediately after #; ' +
+                        'Specify a nonempty ID, for example {#section-id}; ' +
                         'an empty ID falls back to an automatic anchor',
                     context: heading.line,
                 });

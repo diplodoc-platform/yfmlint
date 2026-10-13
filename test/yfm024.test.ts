@@ -35,7 +35,7 @@ describe('YFM024', () => {
         expect(warnings.every((error) => error.level === LogLevels.WARN)).toBe(true);
         expect(formatErrors(warnings)[0]).toBe(
             'test.md: 1: YFM024 / empty-custom-heading-anchor Custom shorthand heading anchor is empty ' +
-                '[Use {#section-id} without a space immediately after #; ' +
+                '[Specify a nonempty ID, for example {#section-id}; ' +
                 'an empty ID falls back to an automatic anchor] ' +
                 '[Context: "# Title {# spaced}"]',
         );

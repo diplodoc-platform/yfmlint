@@ -479,10 +479,6 @@ npm run test:watch
 
 ### Adding a New Rule
 
-YFM024 reads the transform's empty shorthand-ID marker and defaults to WARN.
-Preserve arbitrary boolean attributes, configuration overrides and source context.
-Validate the actual updated plugin as well as synthetic markers; older plugins emit no marker.
-
 1. Create rule file in `src/rules/yfmXXX.ts`
 2. Follow the `Rule` interface pattern
 3. Export from `src/rules/index.ts`
