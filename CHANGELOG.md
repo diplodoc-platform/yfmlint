@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.11.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.10.0...v1.11.0) (2026-10-14)
+
+
+### Features
+
+* warn on ambiguous custom heading anchors (YFM024) ([fa2dd13](https://github.com/diplodoc-platform/yfmlint/commit/fa2dd13c8164cf18d5761131de9b1b0bc5365844))
+
+
+### Bug Fixes
+
+* restrict YFM024 to empty shorthand heading anchors ([8e9d2c4](https://github.com/diplodoc-platform/yfmlint/commit/8e9d2c407152bc8b566f52b03bc0b2e588d44bf6))
+
 ## [1.10.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.9.4...v1.10.0) (2026-09-15)
 
 
