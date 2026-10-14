@@ -267,7 +267,8 @@ The default level is **WARN**, not ERROR; the warning does not itself fail a bui
 It can be disabled or promoted through the usual lint configuration.
 
 Rendering falls back to the automatic anchor for an empty parsed ID.
-Pass a transform anchors plugin that emits the `YFM024` token marker to `yfmlint()`.
+Requires the anchors plugin from `@diplodoc/transform` **4.78.6 or later**.
+Pass this plugin to `yfmlint()` to emit the `YFM024` token marker.
 Older plugins without this marker continue to work but cannot emit this warning.
 
 ### YFM023 - Invalid visibility audience
