@@ -1,6 +1,8 @@
 import type MarkdownIt from 'markdown-it';
 
 import {describe, expect, it, vi} from 'vitest';
+import anchors from '@diplodoc/transform/lib/plugins/anchors';
+import includes from '@diplodoc/transform/lib/plugins/includes';
 
 import {LogLevels, log, yfmlint} from '../src';
 
@@ -17,6 +19,101 @@ const markEmptyAnchors = (md: MarkdownIt) => {
 };
 
 describe('YFM024', () => {
+    describe.each([false, true])('released anchors plugin (includes=%s)', (withIncludes) => {
+        const plugins = withIncludes ? [includes, anchors] : [anchors];
+
+        it.each([
+            '# Title {# spaced}',
+            '## Title {#}',
+            '## Title { # }',
+            'Setext {# broken}\n---',
+            "## Title {title='a # b'}",
+        ])('reports an empty terminal shorthand ID: %s', async (source) => {
+            const errors = (await yfmlint(source, 'test.md', {plugins})) || [];
+            const warnings = errors.filter((error) => error.ruleNames.includes('YFM024'));
+
+            expect(warnings).toHaveLength(1);
+            expect(warnings[0]).toMatchObject({
+                lineNumber: 1,
+                errorContext: source.split('\n')[0],
+                level: LogLevels.WARN,
+            });
+        });
+
+        it.each([
+            '## Title {#good}',
+            '## Title { #good }',
+            '## Title {#good hidden}',
+            '## Title {#good data-x}',
+            '## Title {#good custom-flag}',
+            '## Title {#custom Multiple Words}',
+            '## Title {#good .class title="literal # text"}',
+            '## Title {#\tvalue}',
+            '## Literal `{# bad}`',
+            '## Literal `{#bad words}` {#good}',
+            '## Literal \\{# bad}',
+            '## Use {# x} syntax {#good}',
+            '## A {# x} tail',
+            'Use {# x} syntax {#good}\n---',
+            'A {# x} tail\n---',
+            'Paragraph {# bad}',
+            '```\n## Code {# bad}\n```',
+        ])('does not report valid attributes or literal text: %s', async (source) => {
+            const errors = (await yfmlint(source, 'test.md', {plugins})) || [];
+            expect(errors.filter((error) => error.ruleNames.includes('YFM024'))).toEqual([]);
+        });
+
+        it('preserves source lines and contexts with the real plugin', async () => {
+            const errors =
+                (await yfmlint(
+                    '# Title {# spaced}\n\n## Valid {#id hidden}\n\nSetext {#}\n---',
+                    'test.md',
+                    {plugins},
+                )) || [];
+            const warnings = errors.filter((error) => error.ruleNames.includes('YFM024'));
+
+            expect(warnings.map((error) => error.lineNumber)).toEqual([1, 5]);
+            expect(warnings.map((error) => error.errorContext)).toEqual([
+                '# Title {# spaced}',
+                'Setext {#}',
+            ]);
+        });
+
+        it.each([
+            ['## Title [# broken]', 1],
+            ['## Use [# x] syntax [#good]', 0],
+            ['## A [# x] tail', 0],
+        ])('respects custom attribute delimiters: %s', async (source, count) => {
+            const errors =
+                (await yfmlint(source, 'test.md', {
+                    plugins,
+                    pluginOptions: {leftDelimiter: '[', rightDelimiter: ']'},
+                })) || [];
+            expect(errors.filter((error) => error.ruleNames.includes('YFM024'))).toHaveLength(
+                count,
+            );
+        });
+
+        it.each([false, LogLevels.DISABLED, LogLevels.ERROR])(
+            'honors configuration with the real plugin: %s',
+            async (level) => {
+                const errors =
+                    (await yfmlint('## Title {# broken}', 'test.md', {
+                        plugins,
+                        lintConfig: {YFM024: level},
+                    })) || [];
+                const warnings = errors.filter((error) => error.ruleNames.includes('YFM024'));
+
+                if (level === LogLevels.ERROR) {
+                    expect(warnings).toHaveLength(1);
+                    expect(warnings[0].level).toBe(LogLevels.ERROR);
+                } else {
+                    expect(warnings).toEqual([]);
+                }
+            },
+        );
+    });
+
     it('reports marked ATX and setext headings at their source lines', async () => {
         const errors =
             (await yfmlint(
