@@ -34,11 +34,11 @@
     "build"
   ],
   "scripts": {
-    "build": "npm run build:clean && npm run build:lib && node scripts/verify-build.cjs",
+    "build": "npm run build:clean && npm run build:lib",
     "build:clean": "node -e \"require('node:fs').rmSync('build', {recursive: true, force: true})\"",
     "build:lib": "node esbuild/build.mjs && tsc -p tsconfig.transform.json --emitDeclarationOnly",
     "dev:lib": "tsc -w -p tsconfig.transform.json",
-    "prepublishOnly": "npm run lint && npm run test && npm run build",
+    "prepublishOnly": "npm run lint && npm run test && npm run build && node scripts/verify-build.cjs",
     "test": "vitest --run",
     "test:watch": "vitest",
     "test:coverage": "vitest --run --coverage",
