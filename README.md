@@ -298,3 +298,20 @@ Agent-only content.
 This block uses an unsupported plural value.
 :::
 ```
+
+### YFM025 - Missing local link anchor
+
+**Alias:** `missing-local-anchor`
+
+[Diplodoc CLI](https://github.com/diplodoc-platform/cli#local-anchor-diagnostics), the documentation builder, reports this diagnostic during HTML builds when a local link points to an existing page but its fragment does not match an anchor on that page. It checks same-page links (`#section`) and links to other project pages (`guide.md#section`), using rendered automatic and explicit anchors, including anchors from included files.
+
+For example, `[Section](guide.md#installation)` produces `YFM025` if `guide.md` is reachable but has no `installation` anchor. Correct the link fragment or add the anchor to the target page. Missing or unreachable target pages produce `YFM003` instead.
+
+The default level is `warn`, independently of `YFM002`. Configure the rule in the CLI project's `.yfmlint` file:
+
+```yaml
+log-levels:
+  YFM025: error # warn to report a warning, disabled to disable the check
+```
+
+For the data flow and the responsibilities of the builder, plugins, and lint rules, see [Where checks run](https://diplodoc.com/docs/en/project/lint#check-implementation).
