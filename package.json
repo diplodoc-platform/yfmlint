@@ -50,7 +50,7 @@
     "lock": "npm install --no-workspaces --package-lock-only --ignore-scripts"
   },
   "devDependencies": {
-    "@diplodoc/infra": "2.2.3",
+    "@diplodoc/infra": "2.3.0",
     "@diplodoc/transform": "^4.78.6",
     "@types/lodash": "^4.17.15",
     "@types/markdown-it": "^13.0.9",
