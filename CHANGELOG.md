@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.1](https://github.com/diplodoc-platform/yfmlint/compare/v1.11.0...v1.11.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* build exported artifacts reliably on Windows ([912ca72](https://github.com/diplodoc-platform/yfmlint/commit/912ca72b1afb45be2eb1e3408ab1907dd39eee55))
+* verify exported artifacts only before publishing ([18152b4](https://github.com/diplodoc-platform/yfmlint/commit/18152b4ea3349360da58def341e13d5c2f74407f))
+
 ## [1.11.0](https://github.com/diplodoc-platform/yfmlint/compare/v1.10.0...v1.11.0) (2026-10-14)
 
 
