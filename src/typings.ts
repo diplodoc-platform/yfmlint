@@ -27,6 +27,8 @@ export type LintConfig = {
 };
 
 export interface Options {
+    /** Parse general Markdown attributes; defaults to true independently of custom plugins. */
+    enableMarkdownAttrs?: boolean;
     plugins?: MarkdownItPlugin[];
     pluginOptions?: Record<string, unknown>;
     lintConfig?: RawLintConfig;

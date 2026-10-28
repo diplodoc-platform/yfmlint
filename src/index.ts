@@ -29,6 +29,7 @@ export async function yfmlint(
     };
     const {
         plugins: customPlugins = [],
+        enableMarkdownAttrs = true,
         pluginOptions = {},
         frontMatter = null,
         trimPageConstructor = true,
@@ -62,10 +63,8 @@ export async function yfmlint(
     pluginOptions.isLintRun = true;
 
     const config = normalizeConfig(defaultLintConfig, lintConfig);
-    // Add markdown-it-attrs plugin by default to support attribute syntax in markdown
-    // Custom plugins are added after attrs plugin
-    const plugins =
-        (customPlugins && customPlugins.length && [attrs, ...customPlugins]) || undefined;
+    // Attribute parsing is independent of whether callers install other plugins.
+    const plugins = [...(enableMarkdownAttrs ? [attrs] : []), ...(customPlugins || [])];
     // markdownlint expects plugins in format: [plugin, options]
     // This allows passing pluginOptions to all plugins
     const preparedPlugins: Array<[MarkdownItPlugin, Record<string, unknown>]> | undefined =
