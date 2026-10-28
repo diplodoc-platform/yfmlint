@@ -50,6 +50,28 @@ if (errors && errors.length > 0) {
 }
 ```
 
+### Markdown attribute parsing
+
+Set `enableMarkdownAttrs` on the top-level lint options to match your renderer:
+
+```typescript
+await yfmlint(content, path, {
+  enableMarkdownAttrs: false,
+  plugins,
+  pluginOptions,
+});
+```
+
+The default remains `true`. The selector applies with absent, empty, or populated
+`plugins`; a value inside `pluginOptions` does not override it. Custom attribute
+delimiters still use `pluginOptions.leftDelimiter` and `rightDelimiter`.
+
+Compatibility note: previously attributes were installed only with a nonempty
+custom plugin list. Default-on parsing now also applies without custom plugins;
+use explicit `false` to retain literal brace text in those calls. This correction
+can change token-dependent diagnostics. Renderer/linter integrations should pass
+the same explicit value rather than rely on different package defaults.
+
 ### With Plugins
 
 ```javascript
