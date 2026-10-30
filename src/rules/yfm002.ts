@@ -1,6 +1,10 @@
 import type {Rule} from 'markdownlint';
 
-import {findLinksInInlineTokens} from './helpers';
+import {
+    findLinksInInlineTokens,
+    resolveIncludeSource,
+    validateLineNumberAndGetFilePath,
+} from './helpers';
 
 export const yfm002: Rule = {
     names: ['YFM002', 'no-header-found-for-link'],
@@ -13,6 +17,13 @@ export const yfm002: Rule = {
             return;
         }
 
-        findLinksInInlineTokens(params, 'YFM002', onError);
+        findLinksInInlineTokens(params, 'YFM002', onError, (link, inline) => {
+            const rawLineNumber = link.lineNumber || inline.lineNumber;
+            const source =
+                resolveIncludeSource(params, rawLineNumber, link, inline) ||
+                validateLineNumberAndGetFilePath(params, rawLineNumber);
+
+            onError({lineNumber: source.lineNumber, context: link.attrGet('href') || ''});
+        });
     },
 };
