@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.2](https://github.com/diplodoc-platform/yfmlint/compare/v1.11.1...v1.11.2) (2026-10-30)
+
+
+### Bug Fixes
+
+* report only failed anchor destinations in context DOCSTOOLS-7022 ([8ab9744](https://github.com/diplodoc-platform/yfmlint/commit/8ab974438a94c3d1fab1792db0d7146ceb433b97))
+
 ## [1.11.1](https://github.com/diplodoc-platform/yfmlint/compare/v1.11.0...v1.11.1) (2026-10-26)
 
 
