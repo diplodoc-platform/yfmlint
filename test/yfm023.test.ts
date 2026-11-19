@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import dedent from 'ts-dedent';
-import visibility from '@diplodoc/transform/lib/plugins/visibility';
+import visibility from '@diplodoc/transform/plugins/visibility';
 
 import {LogLevels, yfmlint} from '../src';
 

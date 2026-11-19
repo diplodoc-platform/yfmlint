@@ -1,5 +1,5 @@
 import type {Rule} from 'markdownlint';
-import type {TokenWithAttrs} from '../typings';
+import type {TokenWithAttrs} from './typings';
 
 /** Report empty shorthand heading IDs marked by the transform anchors plugin. */
 export const yfm024: Rule = {
