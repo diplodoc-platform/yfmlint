@@ -1,8 +1,8 @@
-import type MarkdownIt from 'markdown-it';
+import type {MarkdownIt} from 'markdown-it';
 
 import {describe, expect, it, vi} from 'vitest';
-import anchors from '@diplodoc/transform/lib/plugins/anchors';
-import includes from '@diplodoc/transform/lib/plugins/includes';
+import anchors from '@diplodoc/transform/plugins/anchors';
+import includes from '@diplodoc/transform/plugins/includes';
 
 import {LogLevels, log, yfmlint} from '../src';
 

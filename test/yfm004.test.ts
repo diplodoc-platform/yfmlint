@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import table from '@diplodoc/transform/lib/plugins/table';
+import table from '@diplodoc/transform/plugins/table';
 import dedent from 'ts-dedent';
 
 import {LogLevels, yfmlint} from '../src';

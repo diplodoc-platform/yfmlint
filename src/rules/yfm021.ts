@@ -1,5 +1,5 @@
 import type {Rule} from 'markdownlint';
-import type {TokenWithAttrs} from '../typings';
+import type {TokenWithAttrs} from './typings';
 
 /**
  * YFM021 - Empty automatic heading anchor.
