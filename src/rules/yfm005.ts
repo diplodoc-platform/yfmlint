@@ -1,5 +1,5 @@
 import type {Rule} from 'markdownlint';
-import type {TokenWithAttrs} from '../typings';
+import type {TokenWithAttrs} from './typings';
 
 import {
     CHANGELOG_CLOSE_RE,

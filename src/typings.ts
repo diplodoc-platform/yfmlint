@@ -1,8 +1,22 @@
-import type {LintError as BaseLintError, MarkdownItToken} from 'markdownlint';
 import type {LogLevels} from './utils';
 
-// Re-export BaseLintError for use in index.ts
-export type {BaseLintError};
+// The bundled linter is private to this package. Keep the published diagnostics
+// structural so consumers do not need to install the fork for its types.
+export interface BaseLintError {
+    lineNumber: number;
+    ruleNames: string[];
+    ruleDescription: string;
+    ruleInformation: string;
+    errorDetail: string;
+    errorContext: string;
+    errorRange: number[];
+    fixInfo?: {
+        lineNumber?: number;
+        editColumn?: number;
+        deleteCount?: number;
+        insertText?: string;
+    };
+}
 
 // Markdown-it plugin type (simplified - markdownlint accepts plugins in [plugin, options] format)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -43,7 +57,3 @@ export interface Logger {
 export interface LintError extends BaseLintError {
     level: LogLevels;
 }
-
-export type TokenWithAttrs = MarkdownItToken & {
-    attrGet(name: string): string | null;
-};

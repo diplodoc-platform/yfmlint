@@ -1,5 +1,5 @@
 import type {MarkdownItToken, RuleOnError, RuleParams} from 'markdownlint';
-import type {TokenWithAttrs} from '../typings';
+import type {TokenWithAttrs} from './typings';
 
 export interface IncludeChainEntry {
     file: string;
