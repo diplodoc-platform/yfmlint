@@ -40,7 +40,15 @@ export type LintConfig = {
     [x: string]: false | RuleConfig;
 };
 
+/** Source attribution attached by an include host to its owned token copies. */
+export interface TokenSourceInfo {
+    sourceFile: string;
+    includeChain: Array<{file: string; line: number}>;
+}
+
 export interface Options {
+    /** Parse general Markdown attributes; defaults to true independently of custom plugins. */
+    enableMarkdownAttrs?: boolean;
     plugins?: MarkdownItPlugin[];
     pluginOptions?: Record<string, unknown>;
     lintConfig?: RawLintConfig;

@@ -116,6 +116,35 @@ describe('validateLineNumberAndGetFilePath', () => {
     });
 });
 
+describe('sourceInfo attribution', () => {
+    it('prefers valid host sourceInfo without changing opaque meta', () => {
+        const params = makeParams({lines: ['root', 'include', 'tail']});
+        const meta = Object.freeze(new Date(0));
+        const token = Object.assign(makeToken(null), {
+            meta,
+            sourceInfo: {sourceFile: 'child.md', includeChain: [{file: 'root.md', line: 2}]},
+        });
+        expect(resolveIncludeSource(params, 7, token)).toEqual({
+            lineNumber: 2,
+            sourceFile: 'child.md',
+            sourceLineNumber: 7,
+            includeChain: [{file: 'root.md', line: 2}],
+        });
+        expect(token.meta).toBe(meta);
+    });
+
+    it('falls back to existing metadata when sourceInfo is invalid', () => {
+        const params = makeParams({lines: ['root', 'include']});
+        const token = Object.assign(
+            makeToken({sourceFile: 'old.md', includeChain: [{file: 'root.md', line: 2}]}),
+            {
+                sourceInfo: {sourceFile: 'bad.md', includeChain: [{file: 'root.md', line: 0}]},
+            },
+        );
+        expect(resolveIncludeSource(params, 1, token)?.sourceFile).toBe('old.md');
+    });
+});
+
 describe('resolveIncludeSource', () => {
     it('returns null when token has no meta', () => {
         const params = makeParams({});

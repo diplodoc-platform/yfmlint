@@ -1,6 +1,7 @@
 import type {Rule} from 'markdownlint';
 import type {TokenWithAttrs} from './typings';
 
+import {reportBlockDirectives} from './block-directives';
 import {
     CHANGELOG_CLOSE_RE,
     CHANGELOG_OPEN_RE,
@@ -32,6 +33,8 @@ export const yfm005: Rule = {
     tags: ['directives'],
     parser: 'markdownit',
     function: function YFM005(params, onError) {
+        reportBlockDirectives(params, onError, 'YFM005');
+
         const {config} = params;
         if (!config) {
             return;
