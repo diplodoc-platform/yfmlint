@@ -58,7 +58,7 @@
     "@types/node": "^24.13.3",
     "@vitest/coverage-v8": "^3.0.8",
     "lodash": "^4.17.21",
-    "markdown-it": "^13.0.2",
+    "markdown-it": "^15.0.2",
     "markdown-it-attrs": "^4.3.1",
     "markdownlint": "github:diplodoc-platform/markdownlint#no-parse-micromark",
     "punycode.js": "^2.3.1",
