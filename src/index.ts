@@ -118,7 +118,16 @@ export async function yfmlint(
         customRules: Object.values(rules),
     });
 
-    return errors[path].map(({severity: _severity, ...diagnostic}) => {
+    // The previous MD025 accepted a document title only on the first Markdown line or in YAML.
+    const startsWithBlankOrComment = /^\uFEFF?[ \t]*(?:[\r\n]|<!--|$)/.test(input.content);
+    const diagnostics =
+        input.frontMatter === null && startsWithBlankOrComment
+            ? errors[path].filter(({ruleNames, errorDetail}) => {
+                  return ruleNames[0] !== 'MD025' || errorDetail !== null;
+              })
+            : errors[path];
+
+    return diagnostics.map(({severity: _severity, ...diagnostic}) => {
         const level = getLogLevel(config, diagnostic.ruleNames);
         const error = {...diagnostic, level} as LintError;
 

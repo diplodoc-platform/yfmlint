@@ -12,6 +12,44 @@ afterEach(() => vi.restoreAllMocks());
 const vscodeFrontMatter = /^---[ \t]*\r?\n([\s\S]*?)(?<=\n)---[ \t]*(?:\r?\n|$)/;
 
 describe('upstream markdownlint integration', () => {
+    it.each([
+        ['an empty first line', '\n'],
+        ['a BOM and a blank CRLF line', '\uFEFF\t \r\n'],
+        ['a leading HTML comment', '<!-- generated\nintro -->\n'],
+    ])('preserves MD025 behavior after %s', async (_name, prefix) => {
+        const content = prefix + '# Page\n\n# Section\n';
+        const result = await yfmlint(content, 'headings.md', {
+            lintConfig: {default: false, MD025: true},
+        });
+
+        expect(result).toEqual([]);
+    });
+
+    it.each(['# Page', 'Page\n===='])(
+        'reports a second title when %j starts on the first line',
+        async (title) => {
+            const result = await yfmlint(`${title}\n\n# Section\n`, 'headings.md', {
+                lintConfig: {default: false, MD025: true},
+            });
+
+            expect(result).toMatchObject([{ruleNames: ['MD025', 'single-title', 'single-h1']}]);
+        },
+    );
+
+    it('keeps other diagnostics and inline suppression after a leading comment', async () => {
+        const content = [
+            '<!-- markdownlint-disable-next-line MD033 -->',
+            '# Page <span>ignored</span>',
+            '',
+            '# Section <span>reported</span>',
+        ].join('\n');
+        const result = await yfmlint(content, 'headings.md', {
+            lintConfig: {default: false, MD025: true, MD033: true},
+        });
+
+        expect(result).toMatchObject([{ruleNames: ['MD033', 'no-inline-html'], lineNumber: 4}]);
+    });
+
     it('keeps other micromark diagnostics on a page without inline HTML', async () => {
         const errors = await yfmlint('Use &lt;kbd&gt; for keys.\n', 'plain.md', {
             lintConfig: {default: false, MD033: true, MD041: true},
