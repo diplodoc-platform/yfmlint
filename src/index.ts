@@ -1,5 +1,5 @@
 import type {Configuration} from 'markdownlint';
-import type {LintError, Options} from './typings';
+import type {LintConfig, LintError, Options} from './typings';
 
 import MarkdownIt from 'markdown-it';
 import attrs from 'markdown-it-attrs';
@@ -13,6 +13,20 @@ import {getLogLevel, normalizeConfig} from './utils';
 export type {LintConfig, RawLintConfig, TokenSourceInfo} from './typings';
 
 export {LogLevels, log, getLogLevel, normalizeConfig} from './utils';
+
+function skipInlineHtmlRule(config: LintConfig): Configuration {
+    const md033 = config.MD033;
+    if (!md033 || Object.keys(md033).some((key) => key !== 'loglevel')) {
+        return config;
+    }
+
+    // Leave alias and tag precedence to markdownlint for non-canonical configurations.
+    const hasOverride = Object.keys(config).some(
+        (key) => key !== 'MD033' && /^(?:MD033|no-inline-html|html)$/i.test(key),
+    );
+
+    return hasOverride ? config : {...config, MD033: false};
+}
 
 export async function yfmlint(
     content: string,
@@ -76,17 +90,22 @@ export async function yfmlint(
     };
     const input = prepareFrontMatter(content, frontMatter);
     const {originalHeaderLines} = input;
+    // MD033 uses micromark to check inline HTML. Without an opening bracket the
+    // default rule cannot report an error, and there are no inline directives.
+    const plainContent = !input.content.includes('<');
+    const lintConfigForInput = plainContent ? skipInlineHtmlRule(config) : config;
 
     const errors = await lint({
         strings: {[path]: input.content},
         markdownItFactory,
+        noInlineConfig: plainContent,
         // Continue processing even if a rule throws an error
         // This prevents one failing rule from stopping the entire lint process
         handleRuleFailures: true,
         frontMatter: input.frontMatter,
         config: originalHeaderLines
-            ? preserveFrontMatterTitles(config, originalHeaderLines)
-            : config,
+            ? preserveFrontMatterTitles(lintConfigForInput, originalHeaderLines)
+            : lintConfigForInput,
         configParsers: originalHeaderLines
             ? [
                   (text) =>

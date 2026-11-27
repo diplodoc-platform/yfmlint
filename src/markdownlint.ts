@@ -2,10 +2,48 @@ import type {MarkdownIt, Token} from 'markdown-it';
 import type {Configuration} from 'markdownlint';
 
 import escapeRegExp from 'lodash/escapeRegExp';
+import {frontMatterHasTitle, isBlankLine} from 'markdownlint/helpers';
 
 const inlineConfigPrefix = /<!--(?=\s*markdownlint-)/gi;
 const frontMatterTitleRule =
     /^(?:MD001|heading-increment|MD025|single-title|single-h1|MD041|first-line-heading|first-line-h1|headings)$/i;
+const maxFrontMatterLength = 1024;
+
+function compactFrontMatter(header: string, endsAtDocumentEnd: boolean): string {
+    if (header.length <= maxFrontMatterLength) {
+        return header;
+    }
+
+    const segments = header.split(/(\r\n?|\n)/);
+    // Keep the original separators, including a CR that the caller's match split from its LF.
+    const end = endsAtDocumentEnd ? segments.length : segments.length - 1;
+    for (let index = 0; index < end; index += 2) {
+        const line = segments[index];
+        // Leave comment-bearing lines intact to avoid running the upstream comment-removal loop
+        // on large lines that MD022 may never inspect.
+        if (line.includes('<!--') || line.includes('-->')) {
+            continue;
+        }
+
+        if (frontMatterHasTitle([line])) {
+            segments[index] = 'title:';
+        } else {
+            segments[index] = isBlankLine(line) ? ' ' : '-';
+        }
+    }
+
+    return segments.join('');
+}
+
+function markFrontMatterEnd(header: string): string | undefined {
+    const lineEnding = /(?:\r\n?|\n)$/.exec(header)?.[0];
+    if (!lineEnding || header.includes('\t')) {
+        return undefined;
+    }
+
+    // A trailing tab keeps the closing line's blankness and title detection intact.
+    return header.slice(0, -lineEnding.length) + '\t' + lineEnding;
+}
 
 function matchFrontMatterLines(header: string): RegExp {
     const lines = header.split(/\r\n?|\n/);
@@ -23,8 +61,8 @@ function matchFrontMatterLines(header: string): RegExp {
 
 /**
  * Evaluate the caller's JavaScript pattern before markdownlint translates
- * its front-matter option to RE2. Pass the boundary so standard rules can
- * still see the header without compiling its contents as a regular expression.
+ * its front-matter option to RE2. Keep the header's line count, title and
+ * blank-line semantics while avoiding a second scan of long metadata lines.
  * @param content - Document before markdownlint normalizes line endings.
  * @param pattern - Optional caller-provided front-matter matcher.
  * @returns Input and a pattern supported by the lint engine.
@@ -50,12 +88,25 @@ export function prepareFrontMatter(content: string, pattern: RegExp | null) {
 
     // Upstream scans the header for inline configuration before removing it.
     const originalHeader = source.slice(0, headerEnd);
-    const header = originalHeader.replace(inlineConfigPrefix, '<!- ');
+    const endsAtDocumentEnd = headerEnd === source.length;
+    const maskedHeader = originalHeader.replace(inlineConfigPrefix, '<!- ');
+    let header = compactFrontMatter(maskedHeader, endsAtDocumentEnd);
+    let frontMatter = /^[\s\S]*$/;
+    if (!endsAtDocumentEnd) {
+        const markedHeader = header === maskedHeader ? undefined : markFrontMatterEnd(header);
+        if (markedHeader) {
+            // Use the unique tab instead of compiling a repetition for every header line.
+            header = markedHeader;
+            frontMatter = /^[^\t]*\t\n/;
+        } else {
+            frontMatter = matchFrontMatterLines(header);
+        }
+    }
 
     return {
         content:
             content.slice(0, content.length - source.length) + header + source.slice(headerEnd),
-        frontMatter: headerEnd === source.length ? /^[\s\S]*$/ : matchFrontMatterLines(header),
+        frontMatter,
         originalHeaderLines:
             header === originalHeader
                 ? undefined
@@ -64,7 +115,7 @@ export function prepareFrontMatter(content: string, pattern: RegExp | null) {
 }
 
 /**
- * Evaluate custom title patterns against the original YAML when inline configuration was masked.
+ * Evaluate custom title patterns against the original YAML when the lint header was rewritten.
  * @param config - Caller or inline markdownlint configuration.
  * @param lines - Original front matter lines.
  * @returns Configuration with equivalent title checks for this document.
