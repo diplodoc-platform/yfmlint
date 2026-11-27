@@ -12,6 +12,35 @@ afterEach(() => vi.restoreAllMocks());
 const vscodeFrontMatter = /^---[ \t]*\r?\n([\s\S]*?)(?<=\n)---[ \t]*(?:\r?\n|$)/;
 
 describe('upstream markdownlint integration', () => {
+    it('keeps other micromark diagnostics on a page without inline HTML', async () => {
+        const errors = await yfmlint('Use &lt;kbd&gt; for keys.\n', 'plain.md', {
+            lintConfig: {default: false, MD033: true, MD041: true},
+        });
+
+        expect(errors?.map(({lineNumber, ruleNames}) => [lineNumber, ruleNames[0]])).toEqual([
+            [1, 'MD041'],
+        ]);
+    });
+
+    it('evaluates custom inline HTML rule options on a page without inline HTML', async () => {
+        class AllowedElement {
+            toString() {
+                throw new Error('Could not read the allowed element');
+            }
+        }
+
+        const errors = await yfmlint('Plain content.\n', 'custom-html-options.md', {
+            lintConfig: {default: false, MD033: {allowed_elements: [new AllowedElement()]}},
+        });
+
+        expect(errors).toMatchObject([
+            {
+                ruleNames: ['MD033', 'no-inline-html'],
+                errorDetail: expect.stringContaining('Could not read the allowed element'),
+            },
+        ]);
+    });
+
     it.each(['\n', '\r\n'])(
         'preserves JS front matter lookbehind and body diagnostics with line ending %j',
         async (newline) => {
@@ -79,7 +108,8 @@ describe('upstream markdownlint integration', () => {
     );
 
     it('preserves the line count when the pattern matches only the CR in a CRLF', async () => {
-        const errors = await yfmlint('---\r\ntitle: Test\r\n---\r\nbody ', 'partial-crlf.md', {
+        const content = `---\r\ntitle: ${'Test'.repeat(1024)}\r\n---\r\nbody `;
+        const errors = await yfmlint(content, 'partial-crlf.md', {
             frontMatter: /^---[\s\S]+?---\r/,
             lintConfig: {default: false, MD009: true},
         });
@@ -96,15 +126,14 @@ describe('upstream markdownlint integration', () => {
         expect(errors).toEqual([]);
     });
 
-    it('uses the same boundary pattern for short and long metadata', async () => {
+    it('keeps the lint input small for long metadata', async () => {
         const document = (summary: string) =>
             `---\ntitle: Test\nsummary: ${summary}\n---\n\n<div>Body</div> `;
-        const short = document('test');
         const long = document('metadata'.repeat(8192));
 
-        const shortPattern = prepareFrontMatter(short, vscodeFrontMatter).frontMatter;
-        const longPattern = prepareFrontMatter(long, vscodeFrontMatter).frontMatter;
-        expect(longPattern?.source).toBe(shortPattern?.source);
+        const prepared = prepareFrontMatter(long, vscodeFrontMatter);
+        expect(prepared.content.length).toBeLessThan(128);
+        expect(prepared.content).toMatch(/\n\n<div>Body<\/div> $/);
 
         const errors = await yfmlint(long, 'long-metadata.md', {
             frontMatter: vscodeFrontMatter,
@@ -114,16 +143,21 @@ describe('upstream markdownlint integration', () => {
         expect(errors).toMatchObject([{lineNumber: 6, fixInfo: {editColumn: 16, deleteCount: 1}}]);
     });
 
-    it('preserves offsets for a front matter block longer than the RE2 repeat limit', async () => {
-        const properties = Array.from({length: 1000}, (_, index) => `prop${index}: value`);
-        const content = ['---', ...properties, '---', '', '<span>Body</span>'].join('\n');
-        const errors = await yfmlint(content, 'many-metadata-lines.md', {
-            frontMatter: vscodeFrontMatter,
-            lintConfig: {default: false, MD033: true},
-        });
+    it.each(['# remark', '# <!-- keep\ttab -->'])(
+        'preserves offsets beyond the RE2 repeat limit with %j in YAML',
+        async (comment) => {
+            const properties = Array.from({length: 1000}, (_, index) => `prop${index}: value`);
+            const content = ['---', comment, ...properties, '---', '', '<span>Body</span>'].join(
+                '\n',
+            );
+            const errors = await yfmlint(content, 'many-metadata-lines.md', {
+                frontMatter: vscodeFrontMatter,
+                lintConfig: {default: false, MD033: true},
+            });
 
-        expect(errors).toMatchObject([{lineNumber: 1004, errorDetail: 'Element: span'}]);
-    });
+            expect(errors).toMatchObject([{lineNumber: 1005, errorDetail: 'Element: span'}]);
+        },
+    );
 
     it('stops a custom front matter match at the exact position within a line', async () => {
         const captureSource = vi.fn();
@@ -131,13 +165,63 @@ describe('upstream markdownlint integration', () => {
             md.core.ruler.push('capture_body', (state) => captureSource(state.src));
         };
 
-        await yfmlint('---\ntitle: Test\n---Body', 'partial-line.md', {
+        await yfmlint(`---\ntitle: ${'Test'.repeat(1024)}\n---Body`, 'partial-line.md', {
             frontMatter: /^---[\s\S]+?---/,
             lintConfig: {default: false, YFM001: true},
             plugins: [plugin],
         });
 
         expect(captureSource).toHaveBeenCalledExactlyOnceWith('Body');
+    });
+
+    it.each(['default', 'caller config', 'inline config', 'placeholder'] as const)(
+        'preserves %s title detection after shortening a long header line',
+        async (mode) => {
+            const titleRule = {
+                front_matter_title: mode === 'placeholder' ? '^-$' : '^summary: .*tail 😀$',
+            };
+            const inlineConfig = JSON.stringify({'single-title': titleRule});
+            const field = mode === 'default' ? 'title' : 'summary';
+            const content = [
+                '---',
+                `${field}: ${'metadata'.repeat(8192)}tail 😀`,
+                '---',
+                mode === 'inline config'
+                    ? `<!-- markdownlint-configure-file ${inlineConfig} -->`
+                    : '',
+                '# Duplicate title',
+            ].join('\n');
+            const errors = await yfmlint(content, 'long-title.md', {
+                frontMatter: vscodeFrontMatter,
+                lintConfig: {
+                    default: false,
+                    'single-title':
+                        mode === 'default' || mode === 'inline config' ? true : titleRule,
+                },
+            });
+
+            expect(errors?.map(({ruleNames, lineNumber}) => [ruleNames[0], lineNumber])).toEqual(
+                mode === 'placeholder' ? [] : [['MD025', 5]],
+            );
+        },
+    );
+
+    it.each([
+        ['quote prefixes', '>'.repeat(4096), true],
+        ['nonblank text', `${'>'.repeat(4096)}Metadata`, false],
+        ['an HTML comment', `<!-- ${'metadata'.repeat(1024)} -->`, true],
+    ])('preserves MD022 spacing across a header ending in %s', async (_name, finalLine, blank) => {
+        const content = ['---', finalLine, '# Body', '', 'Paragraph'].join('\n');
+        const errors = await yfmlint(content, 'header-spacing.md', {
+            frontMatter: /^---\n[^\n]*\n/,
+            lintConfig: {default: false, MD022: {include_front_matter: true}},
+        });
+
+        if (blank) {
+            expect(errors).toEqual([]);
+        } else {
+            expect(errors).toMatchObject([{lineNumber: 3, fixInfo: {insertText: '\n'}}]);
+        }
     });
 
     it.each(['caller config', 'inline config'] as const)(
