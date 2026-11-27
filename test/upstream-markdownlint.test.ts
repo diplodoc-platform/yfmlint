@@ -54,6 +54,47 @@ describe('upstream markdownlint integration', () => {
         expect(result).toMatchObject([{lineNumber: 5, errorDetail: 'Element: b'}]);
     });
 
+    it.each([
+        ['LF with a closing marker', '\n', '---'],
+        ['CRLF with a padded closing marker', '\r\n', '--- \t'],
+        ['CR with a closing marker', '\r', '---'],
+    ])(
+        'reports and fixes trailing whitespace after front matter for %s',
+        async (_name, newline, closing) => {
+            const content = ['---', 'title: Test', closing, 'body '].join(newline);
+            const errors = await yfmlint(content, 'trailing-whitespace.md', {
+                frontMatter: /^---[\s\S]+?---/,
+                lintConfig: {default: false, MD009: true},
+            });
+
+            expect(errors).toMatchObject([
+                {
+                    lineNumber: 4,
+                    ruleNames: ['MD009', 'no-trailing-spaces'],
+                    fixInfo: {editColumn: 5, deleteCount: 1},
+                },
+            ]);
+        },
+    );
+
+    it('preserves the line count when the pattern matches only the CR in a CRLF', async () => {
+        const errors = await yfmlint('---\r\ntitle: Test\r\n---\r\nbody ', 'partial-crlf.md', {
+            frontMatter: /^---[\s\S]+?---\r/,
+            lintConfig: {default: false, MD009: true},
+        });
+
+        expect(errors).toMatchObject([{lineNumber: 4, fixInfo: {editColumn: 5, deleteCount: 1}}]);
+    });
+
+    it('accepts a padded closing marker at the end of the file', async () => {
+        const errors = await yfmlint('---\ntitle: Test\n--- ', 'header-only.md', {
+            frontMatter: /^---[\s\S]+?---/,
+            lintConfig: {default: false, MD009: true},
+        });
+
+        expect(errors).toEqual([]);
+    });
+
     it('preserves plugin registration order and autolink settings', async () => {
         const observed: string[] = [];
         const plugin = (md: MarkdownIt, options: {isLintRun: boolean}) => {
@@ -134,4 +175,47 @@ describe('upstream markdownlint integration', () => {
             expect(child?.meta?.sourceFile).toBe('included.md');
         },
     );
+
+    it('attributes a broken link through a plugin getter that uses private class state', async () => {
+        class IncludeMetadata {
+            [key: string]: unknown;
+
+            #file = 'included.md';
+            includeChain = [{file: 'main.md', line: 1}];
+
+            get sourceFile() {
+                return this.#file;
+            }
+
+            get unused() {
+                throw new Error('Unused metadata getter was evaluated');
+            }
+        }
+
+        const metadata = new IncludeMetadata();
+        const plugin = (md: MarkdownIt) => {
+            md.core.ruler.push('mark_broken_include_link', (state) => {
+                const inline = state.tokens.find((token) => token.type === 'inline');
+                const link = inline?.children?.find((token) => token.type === 'link_open');
+                if (link) {
+                    link.attrSet('YFM003', 'file-not-found');
+                    link.meta = metadata;
+                }
+            });
+        };
+
+        const errors = await yfmlint('[Link](absent.md)', 'main.md', {
+            plugins: [plugin],
+            lintConfig: {default: false, YFM003: LogLevels.ERROR},
+        });
+
+        expect(errors).toMatchObject([
+            {
+                lineNumber: 1,
+                errorContext:
+                    'main.md:1 → included.md:1 ↛ absent.md; Reason: File does not exist in the project',
+            },
+        ]);
+        expect(Object.isFrozen(metadata)).toBe(false);
+    });
 });
