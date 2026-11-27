@@ -1,10 +1,11 @@
+import type {Configuration} from 'markdownlint';
 import type {LintError, Options} from './typings';
 
 import MarkdownIt from 'markdown-it';
 import attrs from 'markdown-it-attrs';
 
 import defaultLintConfig from './config';
-import {prepareFrontMatter, protectPluginMetadata} from './markdownlint';
+import {prepareFrontMatter, preserveFrontMatterTitles, protectPluginMetadata} from './markdownlint';
 import * as rules from './rules';
 import {captureBlockDirectives} from './rules/block-directives';
 import {getLogLevel, normalizeConfig} from './utils';
@@ -74,6 +75,7 @@ export async function yfmlint(
         return md;
     };
     const input = prepareFrontMatter(content, frontMatter);
+    const {originalHeaderLines} = input;
 
     const errors = await lint({
         strings: {[path]: input.content},
@@ -82,7 +84,18 @@ export async function yfmlint(
         // This prevents one failing rule from stopping the entire lint process
         handleRuleFailures: true,
         frontMatter: input.frontMatter,
-        config,
+        config: originalHeaderLines
+            ? preserveFrontMatterTitles(config, originalHeaderLines)
+            : config,
+        configParsers: originalHeaderLines
+            ? [
+                  (text) =>
+                      preserveFrontMatterTitles(
+                          JSON.parse(text) as Configuration,
+                          originalHeaderLines,
+                      ),
+              ]
+            : undefined,
         customRules: Object.values(rules),
     });
 
