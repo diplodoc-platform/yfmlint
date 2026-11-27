@@ -211,6 +211,26 @@ describe('upstream markdownlint integration', () => {
         ]);
     });
 
+    it.each(['\n', ' '])(
+        'ignores a configure-file command split by the YAML boundary %j',
+        async (separator) => {
+            const content = [
+                '---',
+                `<!--${separator}markdownlint-configure-file {"MD033": false} -->`,
+                '<span>Visible body</span>',
+                '',
+            ].join('\n');
+            const errors = await yfmlint(content, 'split-config.md', {
+                frontMatter: /^---\n<!--(?:\n| )/,
+                lintConfig: {default: false, MD033: true},
+            });
+
+            expect(errors?.map(({lineNumber, ruleNames}) => [lineNumber, ruleNames[0]])).toEqual([
+                [4, 'MD033'],
+            ]);
+        },
+    );
+
     it.each([
         '<!-- markdownlint-disable -->\n{% include [missing](missing.md) %}',
         '{% include [missing](missing.md) %} <!-- markdownlint-disable-line -->',
