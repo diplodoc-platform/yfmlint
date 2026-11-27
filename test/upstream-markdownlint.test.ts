@@ -1,4 +1,4 @@
-import type {MarkdownIt} from 'markdown-it';
+import type {MarkdownIt, Token} from 'markdown-it';
 
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
@@ -95,6 +95,60 @@ describe('upstream markdownlint integration', () => {
         expect(errors).toEqual([]);
     });
 
+    it.each(['caller config', 'inline config'] as const)(
+        'matches the original YAML title with a custom pattern from %s',
+        async (source) => {
+            const title = {front_matter_title: '^title: "<!-- markdownlint-disable MD033'};
+            const titleRules = {MD001: title, 'single-title': title, MD041: title};
+            const inlineConfig = JSON.stringify(titleRules).replace(/</g, '\\u003c');
+            const content = [
+                '---',
+                'title: "<!-- markdownlint-disable MD033 -->"',
+                '---',
+                '',
+                source === 'inline config'
+                    ? `<!-- markdownlint-configure-file ${inlineConfig} -->`
+                    : '',
+                '',
+                '<span>Visible body</span>',
+                '',
+                '### Skipped heading level',
+                '',
+                '# Duplicate title',
+            ].join('\n');
+
+            const result = await yfmlint(content, 'title-pattern.md', {
+                frontMatter: vscodeFrontMatter,
+                lintConfig: {
+                    default: false,
+                    MD033: true,
+                    ...(source === 'caller config' ? titleRules : {}),
+                },
+            });
+
+            expect(result?.map(({lineNumber, ruleNames}) => [lineNumber, ruleNames[0]])).toEqual([
+                [9, 'MD001'],
+                [11, 'MD025'],
+                [7, 'MD033'],
+            ]);
+        },
+    );
+
+    it('does not count a pattern that only matches the masked header as a title', async () => {
+        const content = '---\ntitle: "<!-- markdownlint-disable MD033 -->"\n---\n\nSome text.';
+        const result = await yfmlint(content, 'masked-title.md', {
+            frontMatter: vscodeFrontMatter,
+            lintConfig: {
+                default: false,
+                MD041: {front_matter_title: '^title: "<!- {2}markdownlint'},
+            },
+        });
+
+        expect(result).toMatchObject([
+            {lineNumber: 5, ruleNames: ['MD041', 'first-line-heading', 'first-line-h1']},
+        ]);
+    });
+
     it('preserves plugin registration order and autolink settings', async () => {
         const observed: string[] = [];
         const plugin = (md: MarkdownIt, options: {isLintRun: boolean}) => {
@@ -176,7 +230,7 @@ describe('upstream markdownlint integration', () => {
         },
     );
 
-    it('attributes a broken link through a plugin getter that uses private class state', async () => {
+    it('attributes a broken link with a private getter and preserves the retained token metadata', async () => {
         class IncludeMetadata {
             [key: string]: unknown;
 
@@ -193,6 +247,7 @@ describe('upstream markdownlint integration', () => {
         }
 
         const metadata = new IncludeMetadata();
+        let retainedLink: Token | undefined;
         const plugin = (md: MarkdownIt) => {
             md.core.ruler.push('mark_broken_include_link', (state) => {
                 const inline = state.tokens.find((token) => token.type === 'inline');
@@ -200,6 +255,7 @@ describe('upstream markdownlint integration', () => {
                 if (link) {
                     link.attrSet('YFM003', 'file-not-found');
                     link.meta = metadata;
+                    retainedLink = link;
                 }
             });
         };
@@ -216,6 +272,12 @@ describe('upstream markdownlint integration', () => {
                     'main.md:1 → included.md:1 ↛ absent.md; Reason: File does not exist in the project',
             },
         ]);
-        expect(Object.isFrozen(metadata)).toBe(false);
+        const retainedMetadata = retainedLink?.meta;
+        if (!retainedMetadata) {
+            throw new Error('Expected metadata on the retained link');
+        }
+        expect(retainedMetadata).toBe(metadata);
+        retainedMetadata.checked = true;
+        expect(metadata.checked).toBe(true);
     });
 });
