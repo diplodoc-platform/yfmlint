@@ -187,8 +187,7 @@ describe('resolveIncludeSource', () => {
 
         const result = resolveIncludeSource(params, 5, token, parent);
 
-        expect(result).not.toBeNull();
-        expect(result!.sourceFile).toBe('_includes/file.md');
+        expect(result).toMatchObject({sourceFile: '_includes/file.md'});
     });
 
     it('clamps lineNumber from chain to valid range', () => {
@@ -198,7 +197,7 @@ describe('resolveIncludeSource', () => {
 
         const result = resolveIncludeSource(params, 1, token);
 
-        expect(result!.lineNumber).toBe(2);
+        expect(result).toMatchObject({lineNumber: 2});
     });
 
     it('defaults sourceLineNumber to 1 when rawLineNumber is undefined', () => {
@@ -208,7 +207,7 @@ describe('resolveIncludeSource', () => {
 
         const result = resolveIncludeSource(params, undefined, token);
 
-        expect(result!.sourceLineNumber).toBe(1);
+        expect(result).toMatchObject({sourceLineNumber: 1});
     });
 });
 
