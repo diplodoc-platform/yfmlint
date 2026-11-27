@@ -176,11 +176,11 @@ export function findLinksInInlineTokens(
                         if (handler) {
                             handler(linkToken, inline);
                         } else {
-                            const rawLineNumber = link.lineNumber || inline.lineNumber;
+                            const rawLineNumber = linkToken.lineNumber || inline.lineNumber;
                             const includeSource = resolveIncludeSource(
                                 params,
                                 rawLineNumber,
-                                link,
+                                linkToken,
                                 inline,
                             );
 
@@ -194,7 +194,7 @@ export function findLinksInInlineTokens(
                                     rawLineNumber,
                                 );
                                 const context = createContextWithFileInfo(
-                                    link.line || inline.line,
+                                    linkToken.line || inline.line,
                                     filePath,
                                     params.name,
                                 );
@@ -233,11 +233,11 @@ export function findImagesInInlineTokens(
                         if (handler) {
                             handler(imageToken, inline);
                         } else {
-                            const rawLineNumber = image.lineNumber || inline.lineNumber;
+                            const rawLineNumber = imageToken.lineNumber || inline.lineNumber;
                             const includeSource = resolveIncludeSource(
                                 params,
                                 rawLineNumber,
-                                image,
+                                imageToken,
                                 inline,
                             );
 
@@ -251,7 +251,7 @@ export function findImagesInInlineTokens(
                                     rawLineNumber,
                                 );
                                 const context = createContextWithFileInfo(
-                                    image.line || inline.line,
+                                    imageToken.line || inline.line,
                                     filePath,
                                     params.name,
                                 );

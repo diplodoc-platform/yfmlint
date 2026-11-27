@@ -76,11 +76,11 @@ This package follows the standard Diplodoc platform tech stack. See `.agents/dev
 **Package-specific details**:
 
 - **Language**: TypeScript
-- **Runtime**: Node.js >=11.5.1 (npm requirement)
+- **Source build**: Node.js >=22, npm >=11.5.1
 - **Testing**: Vitest with snapshot testing
 - **Build**: esbuild + TypeScript compiler for type definitions
 - **Dependencies**:
-  - `markdownlint` — base linting engine (custom fork: `github:diplodoc-platform/markdownlint#no-parse-micromark`)
+  - `markdownlint` — official base linting engine
   - `@diplodoc/transform` — YFM transform plugins (e.g., `term` plugin)
   - `markdown-it-attrs` — markdown-it plugin for attributes
 

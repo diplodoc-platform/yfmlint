@@ -1,8 +1,10 @@
-import type {BaseLintError, LintError, MarkdownItPlugin, Options} from './typings';
+import type {LintError, Options} from './typings';
 
+import MarkdownIt from 'markdown-it';
 import attrs from 'markdown-it-attrs';
 
 import defaultLintConfig from './config';
+import {prepareFrontMatter, protectPluginMetadata} from './markdownlint';
 import * as rules from './rules';
 import {captureBlockDirectives} from './rules/block-directives';
 import {getLogLevel, normalizeConfig} from './utils';
@@ -16,18 +18,8 @@ export async function yfmlint(
     path: string,
     opts: Options,
 ): Promise<LintError[] | undefined> {
-    // Dynamic import is needed because markdownlint/promise is ESM
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const {lint} = (await import('markdownlint/promise')) as {
-        lint: (options: {
-            strings: Record<string, string>;
-            markdownItPlugins?: Array<[MarkdownItPlugin, Record<string, unknown>]>;
-            handleRuleFailures?: boolean;
-            frontMatter?: RegExp | null;
-            config?: unknown;
-            customRules?: unknown[];
-        }) => Promise<Record<string, BaseLintError[]>>;
-    };
+    // The engine is ESM; retain the CommonJS package entry point.
+    const {lint} = await import('markdownlint/promise');
     const {
         plugins: customPlugins = [],
         enableMarkdownAttrs = true,
@@ -70,42 +62,38 @@ export async function yfmlint(
         ...(enableMarkdownAttrs ? [attrs] : []),
         ...(customPlugins || []),
     ];
-    // markdownlint expects plugins in format: [plugin, options]
-    // This allows passing pluginOptions to all plugins
-    const preparedPlugins: Array<[MarkdownItPlugin, Record<string, unknown>]> | undefined =
-        plugins &&
-        plugins.map(
-            (plugin) => [plugin, pluginOptions] as [MarkdownItPlugin, Record<string, unknown>],
-        );
+    const markdownItFactory = () => {
+        const md = new MarkdownIt({html: true});
+        md.linkify.set({fuzzyLink: true, urlAuth: true});
+        for (const plugin of plugins) {
+            md.use(plugin, pluginOptions);
+        }
+
+        protectPluginMetadata(md);
+
+        return md;
+    };
+    const input = prepareFrontMatter(content, frontMatter);
 
     const errors = await lint({
-        strings: {[path]: content},
-        markdownItPlugins: preparedPlugins,
+        strings: {[path]: input.content},
+        markdownItFactory,
         // Continue processing even if a rule throws an error
         // This prevents one failing rule from stopping the entire lint process
         handleRuleFailures: true,
-        frontMatter,
+        frontMatter: input.frontMatter,
         config,
         customRules: Object.values(rules),
     });
 
-    return errors[path].map((error) => {
-        (error as LintError).level = getLogLevel(config, error.ruleNames);
-        // Override toString() to provide custom error formatting
-        // Format: "path:line: ruleName description [detail] [Context: ...]"
+    return errors[path].map(({severity: _severity, ...diagnostic}) => {
+        const level = getLogLevel(config, diagnostic.ruleNames);
+        const error = {...diagnostic, level} as LintError;
+
+        // Keep the package's configured level and diagnostic text format.
         error.toString = function () {
-            const {
-                lineNumber,
-                errorDetail,
-                errorContext,
-                ruleNames,
-                // @ts-expect-error bad markdownlint typings
-                ruleName,
-                // @ts-expect-error bad markdownlint typings
-                ruleAlias,
-                ruleDescription,
-            } = error;
-            const ruleMoniker = ruleNames ? ruleNames.join(' / ') : ruleName + ' / ' + ruleAlias;
+            const {lineNumber, errorDetail, errorContext, ruleNames, ruleDescription} = error;
+            const ruleMoniker = ruleNames.join(' / ');
 
             return (
                 `${path}${lineNumber ? `: ${lineNumber}:` : ':'} ${ruleMoniker} ${ruleDescription}` +
@@ -114,6 +102,6 @@ export async function yfmlint(
             );
         };
 
-        return error as LintError;
+        return error;
     });
 }
