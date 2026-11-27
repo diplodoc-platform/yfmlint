@@ -23,8 +23,8 @@ export const yfm007: Rule = {
                     const termToken = term as unknown as TokenWithAttrs;
                     if (termToken.attrGet('YFM007')) {
                         onError({
-                            lineNumber: term.lineNumber,
-                            context: term.line,
+                            lineNumber: termToken.lineNumber,
+                            context: termToken.line,
                         });
                     }
                 }),

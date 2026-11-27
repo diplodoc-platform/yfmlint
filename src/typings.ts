@@ -1,7 +1,6 @@
 import type {LogLevels} from './utils';
 
-// The bundled linter is private to this package. Keep the published diagnostics
-// structural so consumers do not need to install the fork for its types.
+// Keep the bundled linter private and the published diagnostics structural.
 export interface BaseLintError {
     lineNumber: number;
     ruleNames: string[];
@@ -18,7 +17,7 @@ export interface BaseLintError {
     };
 }
 
-// Markdown-it plugin type (simplified - markdownlint accepts plugins in [plugin, options] format)
+// Markdown-it plugin used by the lint parser.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type MarkdownItPlugin = any;
 

@@ -266,8 +266,18 @@ describe('colon block diagnostics', () => {
     it.each([false, true])(
         'defers private parser failure to enabled rules: %s',
         async (enabled) => {
-            const parser = vi.spyOn(MarkdownIt.prototype, 'parse').mockImplementationOnce(() => {
-                throw new Error('private parser unavailable');
+            const parse = MarkdownIt.prototype.parse;
+            const parser = vi.spyOn(MarkdownIt.prototype, 'parse').mockImplementation(function (
+                this: InstanceType<typeof MarkdownIt>,
+                source,
+                env,
+            ) {
+                // Fail only the observer's block-only parser, not the lint host.
+                if (this.core.ruler.getRules('').length === 2) {
+                    throw new Error('private parser unavailable');
+                }
+
+                return parse.call(this, source, env);
             });
 
             try {

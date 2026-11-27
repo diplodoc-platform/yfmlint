@@ -62,7 +62,7 @@
     "lodash": "^4.17.21",
     "markdown-it": "^15.0.3",
     "markdown-it-attrs": "^4.3.1",
-    "markdownlint": "github:diplodoc-platform/markdownlint#e5278f4f1c1f62ea31b46c17fa5edd37044b3dd1",
+    "markdownlint": "^0.42.2",
     "punycode.js": "^2.3.1",
     "ts-dedent": "^2.2.0",
     "typescript": "6.0.3",

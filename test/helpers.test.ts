@@ -87,7 +87,7 @@ function makeInlineToken(
         lineNumber: opts?.lineNumber || 1,
         line: opts?.line || 'inline content',
         meta: opts?.meta || null,
-    } as MarkdownItToken;
+    } as unknown as MarkdownItToken;
 }
 
 describe('validateLineNumberAndGetFilePath', () => {
