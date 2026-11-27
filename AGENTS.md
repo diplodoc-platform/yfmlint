@@ -76,6 +76,7 @@ This package follows the standard Diplodoc platform tech stack. See `.agents/dev
 **Package-specific details**:
 
 - **Language**: TypeScript
+- **Runtime**: Node.js >=22
 - **Source build**: Node.js >=22, npm >=11.5.1
 - **Testing**: Vitest with snapshot testing
 - **Build**: esbuild + TypeScript compiler for type definitions

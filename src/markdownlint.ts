@@ -7,10 +7,24 @@ const inlineConfigPrefix = /<!--(?=\s*markdownlint-)/gi;
 const frontMatterTitleRule =
     /^(?:MD001|heading-increment|MD025|single-title|single-h1|MD041|first-line-heading|first-line-h1|headings)$/i;
 
+function matchFrontMatterLines(header: string): RegExp {
+    const lines = header.split(/\r\n?|\n/);
+    const completeLines = lines.length - 1;
+    const partialLine = lines[completeLines];
+    const linePattern = '(?:[^\\n]*\\n)';
+    // RE2 limits a counted repetition to 1000. Match any partial final line literally.
+    const limit = 1000;
+    const remaining = completeLines % limit;
+    const chunks = (linePattern + `{${limit}}`).repeat(Math.floor(completeLines / limit));
+    const tail = remaining ? linePattern + `{${remaining}}` : '';
+
+    return new RegExp('^' + chunks + tail + escapeRegExp(partialLine));
+}
+
 /**
  * Evaluate the caller's JavaScript pattern before markdownlint translates
- * its front-matter option to RE2. Pass an escaped match so standard rules can
- * still see the header and retain the original document line numbers.
+ * its front-matter option to RE2. Pass the boundary so standard rules can
+ * still see the header without compiling its contents as a regular expression.
  * @param content - Document before markdownlint normalizes line endings.
  * @param pattern - Optional caller-provided front-matter matcher.
  * @returns Input and a pattern supported by the lint engine.
@@ -37,12 +51,11 @@ export function prepareFrontMatter(content: string, pattern: RegExp | null) {
     // Upstream scans the header for inline configuration before removing it.
     const originalHeader = source.slice(0, headerEnd);
     const header = originalHeader.replace(inlineConfigPrefix, '<!- ');
-    const normalizedHeader = header.replace(/\r\n?/g, '\n');
 
     return {
         content:
             content.slice(0, content.length - source.length) + header + source.slice(headerEnd),
-        frontMatter: new RegExp('^' + escapeRegExp(normalizedHeader)),
+        frontMatter: headerEnd === source.length ? /^[\s\S]*$/ : matchFrontMatterLines(header),
         originalHeaderLines:
             header === originalHeader
                 ? undefined
@@ -72,17 +85,17 @@ export function preserveFrontMatterTitles(config: Configuration, lines: string[]
             continue;
         }
 
-        try {
-            const title = new RegExp(String(pattern), 'i');
-            const hasTitle = lines.some((line) => title.test(line));
+        adapted[rule] = {
+            ...settings,
+            // Upstream coerces the effective setting to a string inside the rule's error handler.
+            front_matter_title: {
+                toString() {
+                    const title = new RegExp(String(pattern), 'i');
 
-            adapted[rule] = {...settings, front_matter_title: hasTitle ? '^' : '(?!)'};
-        } catch (error) {
-            // Let the lint engine report invalid patterns as rule failures.
-            if (!(error instanceof SyntaxError || error instanceof TypeError)) {
-                throw error;
-            }
-        }
+                    return lines.some((line) => title.test(line)) ? '^' : '(?!)';
+                },
+            },
+        };
     }
 
     return adapted;
@@ -95,7 +108,18 @@ function copyMetadata(metadata: Token['meta']): Token['meta'] {
 
     const prototype = Object.getPrototypeOf(metadata) as object | null;
     const copy: object = Array.isArray(metadata) ? [] : Object.create(prototype);
-    Object.defineProperties(copy, Object.getOwnPropertyDescriptors(metadata));
+    let needsReceiver = prototype !== Object.prototype && prototype !== null;
+    for (const key of Reflect.ownKeys(metadata)) {
+        const descriptor = Object.getOwnPropertyDescriptor(metadata, key);
+        if (descriptor) {
+            defineCopyProperty(copy, key, descriptor);
+            needsReceiver ||= Boolean(descriptor.get);
+        }
+    }
+
+    if (!needsReceiver) {
+        return copy as Token['meta'];
+    }
 
     // Give class getters their original receiver, including its private fields.
     return new Proxy(copy, {
@@ -103,6 +127,49 @@ function copyMetadata(metadata: Token['meta']): Token['meta'] {
             return Reflect.get(target, key, metadata);
         },
     }) as Token['meta'];
+}
+
+function defineCopyProperty(copy: object, key: PropertyKey, descriptor: PropertyDescriptor): void {
+    if (descriptor.enumerable && descriptor.writable && descriptor.configurable && !(key in copy)) {
+        Reflect.set(copy, key, descriptor.value);
+    } else {
+        Object.defineProperty(copy, key, descriptor);
+    }
+}
+
+function copyToken(token: Token, meta: Token['meta'], children: Token['children']): Token {
+    const copy = Object.create(Object.getPrototypeOf(token)) as Token;
+
+    // Keep prototypes and hidden plugin annotations on copies for the lint engine.
+    // Native token fields are writable data properties and can use the cheaper assignment path.
+    for (const key of Reflect.ownKeys(token)) {
+        const descriptor = Object.getOwnPropertyDescriptor(token, key);
+        if (!descriptor) {
+            continue;
+        }
+
+        if ('value' in descriptor) {
+            switch (key) {
+                case 'meta':
+                    descriptor.value = meta;
+                    break;
+                case 'children':
+                    descriptor.value = children;
+                    break;
+                case 'attrs':
+                    descriptor.value =
+                        token.attrs && token.attrs.map(([name, value]) => [name, value]);
+                    break;
+                case 'map':
+                    descriptor.value = token.map && [...token.map];
+                    break;
+            }
+        }
+
+        defineCopyProperty(copy, key, descriptor);
+    }
+
+    return copy;
 }
 
 function copyLintTokens(tokens: Token[]): Token[] {
@@ -114,21 +181,10 @@ function copyLintTokens(tokens: Token[]): Token[] {
             return;
         }
 
-        // Keep prototypes and hidden plugin annotations on copies for the lint engine.
-        const descriptors = Object.getOwnPropertyDescriptors(token);
-        descriptors.meta.value = meta;
-        descriptors.children.value = children;
-        if (token.attrs) {
-            descriptors.attrs.value = token.attrs.map(([name, value]) => [name, value]);
-        }
-        if (token.map) {
-            descriptors.map.value = [...token.map];
-        }
-
         if (copies === tokens) {
             copies = tokens.slice();
         }
-        copies[index] = Object.create(Object.getPrototypeOf(token), descriptors) as Token;
+        copies[index] = copyToken(token, meta, children);
     });
 
     return copies;
@@ -141,5 +197,18 @@ function copyLintTokens(tokens: Token[]): Token[] {
  */
 export function protectPluginMetadata(md: MarkdownIt): void {
     const parse = md.parse.bind(md);
-    md.parse = (source, env) => copyLintTokens(parse(source, env));
+    let parsing = false;
+    md.parse = (source, env) => {
+        // Nested parses belong to plugins. Only upstream freezes the outer result.
+        if (parsing) {
+            return parse(source, env);
+        }
+
+        parsing = true;
+        try {
+            return copyLintTokens(parse(source, env));
+        } finally {
+            parsing = false;
+        }
+    };
 }

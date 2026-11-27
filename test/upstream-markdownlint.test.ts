@@ -3,6 +3,7 @@ import type {MarkdownIt, Token} from 'markdown-it';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
 import {LogLevels, yfmlint} from '../src';
+import {prepareFrontMatter} from '../src/markdownlint';
 import {yfm024} from '../src/rules/yfm024';
 
 afterEach(() => vi.restoreAllMocks());
@@ -95,6 +96,50 @@ describe('upstream markdownlint integration', () => {
         expect(errors).toEqual([]);
     });
 
+    it('uses the same boundary pattern for short and long metadata', async () => {
+        const document = (summary: string) =>
+            `---\ntitle: Test\nsummary: ${summary}\n---\n\n<div>Body</div> `;
+        const short = document('test');
+        const long = document('metadata'.repeat(8192));
+
+        const shortPattern = prepareFrontMatter(short, vscodeFrontMatter).frontMatter;
+        const longPattern = prepareFrontMatter(long, vscodeFrontMatter).frontMatter;
+        expect(longPattern?.source).toBe(shortPattern?.source);
+
+        const errors = await yfmlint(long, 'long-metadata.md', {
+            frontMatter: vscodeFrontMatter,
+            lintConfig: {default: false, MD009: true},
+        });
+
+        expect(errors).toMatchObject([{lineNumber: 6, fixInfo: {editColumn: 16, deleteCount: 1}}]);
+    });
+
+    it('preserves offsets for a front matter block longer than the RE2 repeat limit', async () => {
+        const properties = Array.from({length: 1000}, (_, index) => `prop${index}: value`);
+        const content = ['---', ...properties, '---', '', '<span>Body</span>'].join('\n');
+        const errors = await yfmlint(content, 'many-metadata-lines.md', {
+            frontMatter: vscodeFrontMatter,
+            lintConfig: {default: false, MD033: true},
+        });
+
+        expect(errors).toMatchObject([{lineNumber: 1004, errorDetail: 'Element: span'}]);
+    });
+
+    it('stops a custom front matter match at the exact position within a line', async () => {
+        const captureSource = vi.fn();
+        const plugin = (md: MarkdownIt) => {
+            md.core.ruler.push('capture_body', (state) => captureSource(state.src));
+        };
+
+        await yfmlint('---\ntitle: Test\n---Body', 'partial-line.md', {
+            frontMatter: /^---[\s\S]+?---/,
+            lintConfig: {default: false, YFM001: true},
+            plugins: [plugin],
+        });
+
+        expect(captureSource).toHaveBeenCalledExactlyOnceWith('Body');
+    });
+
     it.each(['caller config', 'inline config'] as const)(
         'matches the original YAML title with a custom pattern from %s',
         async (source) => {
@@ -148,6 +193,50 @@ describe('upstream markdownlint integration', () => {
             {lineNumber: 5, ruleNames: ['MD041', 'first-line-heading', 'first-line-h1']},
         ]);
     });
+
+    it.each(['enabled', 'disabled by alias', 'disabled by comment'] as const)(
+        'handles an invalid custom title pattern when the rule is %s',
+        async (status) => {
+            const evaluateTitle = vi.fn(() => {
+                throw new Error('Could not read the title pattern');
+            });
+            class TitlePattern {
+                toString() {
+                    return evaluateTitle();
+                }
+            }
+
+            const content = [
+                '---',
+                'title: "<!-- markdownlint-disable MD033 -->"',
+                '---',
+                status === 'disabled by comment'
+                    ? '<!-- markdownlint-configure-file {"MD041": false} -->'
+                    : '',
+                '<span>Visible body</span>',
+            ].join('\n');
+
+            const result = await yfmlint(content, 'lazy-title.md', {
+                frontMatter: vscodeFrontMatter,
+                lintConfig: {
+                    default: false,
+                    MD033: true,
+                    MD041: {front_matter_title: new TitlePattern()},
+                    ...(status === 'disabled by alias' ? {'first-line-heading': false} : {}),
+                },
+            });
+
+            const codes = result?.map(({ruleNames}) => ruleNames[0]);
+            if (status === 'enabled') {
+                expect(evaluateTitle).toHaveBeenCalledOnce();
+                expect(codes).toEqual(['MD033', 'MD041']);
+                expect(result?.[1]?.errorDetail).toContain('Could not read the title pattern');
+            } else {
+                expect(evaluateTitle).not.toHaveBeenCalled();
+                expect(codes).toEqual(['MD033']);
+            }
+        },
+    );
 
     it('preserves plugin registration order and autolink settings', async () => {
         const observed: string[] = [];
@@ -229,6 +318,74 @@ describe('upstream markdownlint integration', () => {
             expect(child?.meta?.sourceFile).toBe('included.md');
         },
     );
+
+    it('retains token descriptors on copied links and their parents', async () => {
+        const annotation = Symbol('annotation');
+        const unused = vi.fn(() => 'plugin note');
+        const metadata = {linksPluginProcessed: true};
+        const plugin = (md: MarkdownIt) => {
+            md.core.ruler.push('annotate_link', (state) => {
+                const inline = state.tokens.find((token) => token.type === 'inline');
+                const link = inline?.children?.find((token) => token.type === 'link_open');
+                if (!inline || !link) {
+                    throw new Error('Expected a link in the parsed tokens');
+                }
+
+                Object.defineProperty(inline, annotation, {value: 'parent'});
+                Object.defineProperty(link, annotation, {value: 'link'});
+                Object.defineProperty(link, 'pluginNote', {get: unused, enumerable: true});
+                link.meta = metadata;
+            });
+        };
+        const rule = vi.spyOn(yfm024, 'function');
+
+        await yfmlint('[Link](target.md)', 'tokens.md', {
+            plugins: [plugin],
+            lintConfig: {default: false, YFM024: LogLevels.ERROR},
+        });
+
+        const {tokens} = rule.mock.calls[0][0].parsers.markdownit;
+        const inline = tokens.find((token) => token.type === 'inline');
+        const link = inline?.children?.find((token) => token.type === 'link_open');
+        expect(Object.getOwnPropertyDescriptor(inline, annotation)?.value).toBe('parent');
+        expect(Object.getOwnPropertyDescriptor(link, annotation)?.value).toBe('link');
+        expect(Object.getOwnPropertyDescriptor(link, 'pluginNote')?.get).toBe(unused);
+        expect(unused).not.toHaveBeenCalled();
+        expect(Object.isFrozen(link?.meta)).toBe(true);
+        expect(Object.isFrozen(metadata)).toBe(false);
+    });
+
+    it('keeps nested parses owned by the plugin until the outer result reaches markdownlint', async () => {
+        const metadata = {linksPluginProcessed: true};
+        const plugin = (md: MarkdownIt) => {
+            md.core.ruler.push('parse_nested', (state) => {
+                if (state.src === 'outer') {
+                    state.tokens = md.parse('[Link](target.md)', state.env);
+                    const token = state.tokens.find((item) => item.type === 'inline');
+                    expect(token?.children?.[0].meta).toBe(metadata);
+                } else {
+                    const token = state.tokens.find((item) => item.type === 'inline');
+                    if (!token?.children?.[0]) {
+                        throw new Error('Expected a link from the nested parse');
+                    }
+
+                    token.children[0].meta = metadata;
+                }
+            });
+        };
+        const rule = vi.spyOn(yfm024, 'function');
+
+        await yfmlint('outer', 'nested.md', {
+            plugins: [plugin],
+            lintConfig: {default: false, YFM024: LogLevels.ERROR},
+        });
+
+        const {tokens} = rule.mock.calls[0][0].parsers.markdownit;
+        const inline = tokens.find((token) => token.type === 'inline');
+        expect(inline?.children?.[0].meta).toEqual(metadata);
+        expect(Object.isFrozen(inline?.children?.[0].meta)).toBe(true);
+        expect(Object.isFrozen(metadata)).toBe(false);
+    });
 
     it('attributes a broken link with a private getter and preserves the retained token metadata', async () => {
         class IncludeMetadata {
