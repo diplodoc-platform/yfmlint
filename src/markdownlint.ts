@@ -13,6 +13,15 @@ const frontMatterTitleRule =
     /^(?:MD001|heading-increment|MD025|single-title|single-h1|MD041|first-line-heading|first-line-h1|headings)$/i;
 const maxFrontMatterLength = 1024;
 
+function maskFrontMatterConfig(header: string, body: string): string {
+    // Keep the HTML opener so MD022 still recognizes YAML comments as blank lines.
+    const masked = header.replace(inlineConfigPrefix, '$1markdownlinx-');
+    // Configure-file scans across line boundaries, including a comment opener in the header.
+    return /^\s*markdownlint-configure-file(?=\s|-->)/i.test(body)
+        ? masked.replace(/<!--(?=\s*$)/, '<!--x')
+        : masked;
+}
+
 function compactFrontMatter(header: string, endsAtDocumentEnd: boolean): string {
     if (header.length <= maxFrontMatterLength) {
         return header;
@@ -121,8 +130,7 @@ export function prepareFrontMatter(content: string, pattern: RegExp | null) {
     const body = source.slice(headerEnd);
     const endsAtDocumentEnd = body.length === 0;
 
-    // Keep the HTML opener so MD022 still recognizes YAML comments as blank lines.
-    const maskedHeader = originalHeader.replace(inlineConfigPrefix, '$1markdownlinx-');
+    const maskedHeader = maskFrontMatterConfig(originalHeader, body);
     let header = compactFrontMatter(maskedHeader, endsAtDocumentEnd);
     let frontMatter = /^[\s\S]*$/;
     if (!endsAtDocumentEnd) {
