@@ -23,30 +23,41 @@ export function prepareFrontMatter(content: string, pattern: RegExp | null) {
         return {content, frontMatter: null};
     }
 
+    const [matchedHeader] = match;
+    let headerEnd = matchedHeader.length;
+    if (!/[\r\n]$/.test(matchedHeader)) {
+        // Assign the rest of the closing line to the header so diagnostics keep their line offsets.
+        const closingLineEnd = /^[ \t]*(?:\r\n?|\n|$)/.exec(source.slice(headerEnd));
+        headerEnd += closingLineEnd?.[0].length ?? 0;
+    }
+
     // Upstream scans the header for inline configuration before removing it.
     // Header text must stay visible to rules such as MD025, but its comments
     // should not enable or suppress rules in the document body.
-    const header = source.slice(0, match[0].length).replace(inlineConfigPrefix, '<!- ');
+    const header = source.slice(0, headerEnd).replace(inlineConfigPrefix, '<!- ');
     const normalizedHeader = header.replace(/\r\n?/g, '\n');
 
     return {
         content:
-            content.slice(0, content.length - source.length) +
-            normalizedHeader +
-            source.slice(match[0].length),
+            content.slice(0, content.length - source.length) + header + source.slice(headerEnd),
         frontMatter: new RegExp('^' + escapeRegExp(normalizedHeader)),
     };
 }
 
 function copyMetadata(tokens: Token[]) {
     for (const token of tokens) {
-        if (token.meta && typeof token.meta === 'object' && !Object.isFrozen(token.meta)) {
-            const prototype = Object.getPrototypeOf(token.meta) as object | null;
-            const copy: object = Array.isArray(token.meta) ? [] : Object.create(prototype);
-            token.meta = Object.defineProperties(
-                copy,
-                Object.getOwnPropertyDescriptors(token.meta),
-            ) as Token['meta'];
+        const metadata = token.meta;
+        if (metadata && typeof metadata === 'object' && !Object.isFrozen(metadata)) {
+            const prototype = Object.getPrototypeOf(metadata) as object | null;
+            const copy: object = Array.isArray(metadata) ? [] : Object.create(prototype);
+            Object.defineProperties(copy, Object.getOwnPropertyDescriptors(metadata));
+
+            // Give class getters their original receiver, including its private fields.
+            token.meta = new Proxy(copy, {
+                get(target, key) {
+                    return Reflect.get(target, key, metadata);
+                },
+            }) as Token['meta'];
         }
 
         if (token.children) {
