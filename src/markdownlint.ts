@@ -4,7 +4,11 @@ import type {Configuration} from 'markdownlint';
 import escapeRegExp from 'lodash/escapeRegExp';
 import {frontMatterHasTitle, isBlankLine} from 'markdownlint/helpers';
 
-const inlineConfigPrefix = /<!--(?=\s*markdownlint-)/gi;
+const inlineConfigPrefix = /(<!--\s*)markdownlint-/gi;
+const scopedInlineConfig =
+    /<!--\s*markdownlint-(?:disable(?:-next-line|-line)?|restore)(?=\s|-->)/i;
+const fileInlineConfig = /<!--\s*markdownlint-(?:disable|enable)-file(?=\s|-->)/i;
+const restoreInlineConfig = /<!--\s*markdownlint-restore(?=\s|-->)/i;
 const frontMatterTitleRule =
     /^(?:MD001|heading-increment|MD025|single-title|single-h1|MD041|first-line-heading|first-line-h1|headings)$/i;
 const maxFrontMatterLength = 1024;
@@ -30,6 +34,33 @@ function compactFrontMatter(header: string, endsAtDocumentEnd: boolean): string 
         } else {
             segments[index] = isBlankLine(line) ? ' ' : '-';
         }
+    }
+
+    return segments.join('');
+}
+
+function excludeFrontMatterFromRules(header: string, body: string): string {
+    if (!scopedInlineConfig.test(body)) {
+        return header;
+    }
+
+    const segments = header.split(/(\r\n?|\n)/);
+    // The header ends in a line break, so the last content segment precedes the final separator.
+    const closingLine = segments.length - 3;
+    const disableLine = '<!-- markdownlint-disable-line -->';
+    const hasFileConfig = fileInlineConfig.test(body);
+    if (hasFileConfig && restoreInlineConfig.test(body)) {
+        // A body restore can refer to the initial state before file directives. Leave that
+        // snapshot intact and disable only the YAML lines in this case.
+        for (let index = 0; index <= closingLine; index += 2) {
+            segments[index] += disableLine;
+        }
+    } else {
+        if (hasFileConfig) {
+            segments[0] += '<!-- markdownlint-capture -->';
+        }
+        segments[0] += '<!-- markdownlint-disable -->';
+        segments[closingLine] += '<!-- markdownlint-restore -->' + disableLine;
     }
 
     return segments.join('');
@@ -86,13 +117,24 @@ export function prepareFrontMatter(content: string, pattern: RegExp | null) {
         headerEnd += closingLineEnd?.[0].length ?? 0;
     }
 
-    // Upstream scans the header for inline configuration before removing it.
     const originalHeader = source.slice(0, headerEnd);
-    const endsAtDocumentEnd = headerEnd === source.length;
-    const maskedHeader = originalHeader.replace(inlineConfigPrefix, '<!- ');
+    const body = source.slice(headerEnd);
+    const endsAtDocumentEnd = body.length === 0;
+
+    // Keep the HTML opener so MD022 still recognizes YAML comments as blank lines.
+    const maskedHeader = originalHeader.replace(inlineConfigPrefix, '$1markdownlinx-');
     let header = compactFrontMatter(maskedHeader, endsAtDocumentEnd);
     let frontMatter = /^[\s\S]*$/;
     if (!endsAtDocumentEnd) {
+        // A partial closing line already counts as one YAML line in diagnostics. Give its
+        // Markdown suffix a separate line in the inline-directive scan as well.
+        if (!/[\r\n]$/.test(header)) {
+            header += '\n';
+        }
+
+        // Upstream computes active rules before removing YAML. Suppress those lines when
+        // body directives can otherwise disable a rule everywhere it would actually run.
+        header = excludeFrontMatterFromRules(header, body);
         const markedHeader = header === maskedHeader ? undefined : markFrontMatterEnd(header);
         if (markedHeader) {
             // Use the unique tab instead of compiling a repetition for every header line.
@@ -104,8 +146,7 @@ export function prepareFrontMatter(content: string, pattern: RegExp | null) {
     }
 
     return {
-        content:
-            content.slice(0, content.length - source.length) + header + source.slice(headerEnd),
+        content: content.slice(0, content.length - source.length) + header + body,
         frontMatter,
         originalHeaderLines:
             header === originalHeader

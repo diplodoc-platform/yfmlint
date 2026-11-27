@@ -174,6 +174,117 @@ describe('upstream markdownlint integration', () => {
         expect(captureSource).toHaveBeenCalledExactlyOnceWith('Body');
     });
 
+    it.each(['\n', '\r\n'])(
+        'keeps body line directives aligned after a partial closing line with %j endings',
+        async (newline) => {
+            const content = [
+                '---',
+                'title: Test',
+                '--- <!-- markdownlint-disable-next-line MD009 -->',
+                'hidden ',
+                'visible ',
+                '',
+            ].join(newline);
+            const errors = await yfmlint(content, 'partial-suppression.md', {
+                frontMatter: /^---[\s\S]+?---/,
+                lintConfig: {default: false, MD009: true},
+            });
+
+            expect(errors).toMatchObject([
+                {
+                    lineNumber: 6,
+                    ruleNames: ['MD009', 'no-trailing-spaces'],
+                    fixInfo: {editColumn: 8},
+                },
+            ]);
+        },
+    );
+
+    it('reports a body diagnostic after a partial closing line at EOF', async () => {
+        const errors = await yfmlint('---\ntitle: Test\n---visible ', 'partial-eof.md', {
+            frontMatter: /^---[\s\S]+?---/,
+            lintConfig: {default: false, MD009: true},
+        });
+
+        expect(errors).toMatchObject([
+            {lineNumber: 4, errorDetail: 'Expected: 0 or 2; Actual: 1', fixInfo: {editColumn: 8}},
+        ]);
+    });
+
+    it.each([
+        '<!-- markdownlint-disable -->\n{% include [missing](missing.md) %}',
+        '{% include [missing](missing.md) %} <!-- markdownlint-disable-line -->',
+    ])('skips Markdown-it plugins when the entire body is disabled by %j', async (body) => {
+        const plugin = vi.fn();
+        const errors = await yfmlint(`---\ntitle: Test\n---\n${body}`, 'disabled-body.md', {
+            frontMatter: vscodeFrontMatter,
+            lintConfig: {default: false, YFM003: true},
+            plugins: [plugin],
+        });
+
+        expect(errors).toEqual([]);
+        expect(plugin).not.toHaveBeenCalled();
+    });
+
+    it('runs Markdown-it plugins when a body directive re-enables a rule', async () => {
+        const plugin = vi.fn();
+        const body = [
+            '<!-- markdownlint-disable -->',
+            'Disabled paragraph.',
+            '<!-- markdownlint-enable YFM003 -->',
+            'Enabled paragraph.',
+        ].join('\n');
+
+        await yfmlint(`---\ntitle: Test\n---\n${body}`, 'enabled-body.md', {
+            frontMatter: vscodeFrontMatter,
+            lintConfig: {default: false, YFM003: true},
+            plugins: [plugin],
+        });
+
+        expect(plugin).toHaveBeenCalledOnce();
+    });
+
+    it('skips Markdown-it plugins when the body only re-enables a micromark rule', async () => {
+        const plugin = vi.fn();
+        const content = [
+            '---',
+            'title: Test',
+            '---',
+            '<!-- markdownlint-disable -->',
+            '<!-- markdownlint-enable MD033 -->',
+            '<span>Visible body</span>',
+        ].join('\n');
+        const errors = await yfmlint(content, 'micromark-only.md', {
+            frontMatter: vscodeFrontMatter,
+            lintConfig: {default: false, MD033: true, YFM003: true},
+            plugins: [plugin],
+        });
+
+        expect(errors?.map(({lineNumber, ruleNames}) => [lineNumber, ruleNames[0]])).toEqual([
+            [6, 'MD033'],
+        ]);
+        expect(plugin).not.toHaveBeenCalled();
+    });
+
+    it.each(['plain body', 'restore'] as const)(
+        'preserves the body state after a file directive with %s',
+        async (mode) => {
+            const body = [
+                '<!-- markdownlint-disable-file MD033 -->',
+                mode === 'restore' ? '<!-- markdownlint-restore -->' : '',
+                '<span>Body</span>',
+            ].join('\n');
+            const errors = await yfmlint(`---\ntitle: Test\n---\n${body}`, 'restore.md', {
+                frontMatter: vscodeFrontMatter,
+                lintConfig: {default: false, MD033: true},
+            });
+
+            expect(errors?.map(({lineNumber, ruleNames}) => [lineNumber, ruleNames[0]])).toEqual(
+                mode === 'restore' ? [[6, 'MD033']] : [],
+            );
+        },
+    );
+
     it.each(['default', 'caller config', 'inline config', 'placeholder'] as const)(
         'preserves %s title detection after shortening a long header line',
         async (mode) => {
@@ -210,6 +321,7 @@ describe('upstream markdownlint integration', () => {
         ['quote prefixes', '>'.repeat(4096), true],
         ['nonblank text', `${'>'.repeat(4096)}Metadata`, false],
         ['an HTML comment', `<!-- ${'metadata'.repeat(1024)} -->`, true],
+        ['an unclosed inline config comment', '<!-- markdownlint-disable MD033', true],
     ])('preserves MD022 spacing across a header ending in %s', async (_name, finalLine, blank) => {
         const content = ['---', finalLine, '# Body', '', 'Paragraph'].join('\n');
         const errors = await yfmlint(content, 'header-spacing.md', {
@@ -269,7 +381,7 @@ describe('upstream markdownlint integration', () => {
             frontMatter: vscodeFrontMatter,
             lintConfig: {
                 default: false,
-                MD041: {front_matter_title: '^title: "<!- {2}markdownlint'},
+                MD041: {front_matter_title: '^title: "<!-- markdownlinx'},
             },
         });
 
