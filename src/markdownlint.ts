@@ -239,6 +239,7 @@ function defineCopyProperty(copy: object, key: PropertyKey, descriptor: Property
 
 function copyToken(token: Token, meta: Token['meta'], children: Token['children']): Token {
     const copy = Object.create(Object.getPrototypeOf(token)) as Token;
+    let hasOwnMeta = false;
 
     // Keep prototypes and hidden plugin annotations on copies for the lint engine.
     // Native token fields are writable data properties and can use the cheaper assignment path.
@@ -248,11 +249,15 @@ function copyToken(token: Token, meta: Token['meta'], children: Token['children'
             continue;
         }
 
-        if ('value' in descriptor) {
+        if (key === 'meta') {
+            hasOwnMeta = true;
+            if ('value' in descriptor) {
+                descriptor.value = meta;
+            } else if (descriptor.get) {
+                descriptor.get = () => meta;
+            }
+        } else if ('value' in descriptor) {
             switch (key) {
-                case 'meta':
-                    descriptor.value = meta;
-                    break;
                 case 'children':
                     descriptor.value = children;
                     break;
@@ -269,15 +274,21 @@ function copyToken(token: Token, meta: Token['meta'], children: Token['children'
         defineCopyProperty(copy, key, descriptor);
     }
 
+    if (!hasOwnMeta && 'meta' in token) {
+        // Prevent an inherited getter from returning the plugin's metadata to markdownlint.
+        Object.defineProperty(copy, 'meta', {get: () => meta});
+    }
+
     return copy;
 }
 
 function copyLintTokens(tokens: Token[]): Token[] {
     let copies = tokens;
     tokens.forEach((token, index) => {
-        const meta = copyMetadata(token.meta);
+        const originalMeta = token.meta;
+        const meta = copyMetadata(originalMeta);
         const children = token.children && copyLintTokens(token.children);
-        if (meta === token.meta && children === token.children) {
+        if (meta === originalMeta && children === token.children) {
             return;
         }
 
