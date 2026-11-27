@@ -23,6 +23,8 @@ YFM (Yandex Flavored Markdown) syntax linter with custom rules for Diplodoc plat
 
 ## Installation
 
+The installed package requires Node.js 22 or later.
+
 ```bash
 npm install @diplodoc/yfmlint
 ```
@@ -120,8 +122,6 @@ rules may see new diagnostics, including MD059 for link text and MD060 for table
 columns. Multiline diagnostic details and contexts are displayed on one line.
 
 ## Documentation
-
-Building from source requires Node.js 22 or later, as required by markdownlint.
 
 For detailed information about architecture, development, and contributing, see [AGENTS.md](./AGENTS.md).
 

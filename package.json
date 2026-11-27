@@ -10,6 +10,7 @@
     "documentation"
   ],
   "engines": {
+    "node": ">=22",
     "npm": ">=11.5.1"
   },
   "homepage": "https://github.com/diplodoc-platform/yfmlint#readme",
@@ -38,8 +39,9 @@
     "build:clean": "node -e \"require('node:fs').rmSync('build', {recursive: true, force: true})\"",
     "build:lib": "node esbuild/build.mjs && tsc -p tsconfig.transform.json --emitDeclarationOnly",
     "dev:lib": "tsc -w -p tsconfig.transform.json",
-    "prepublishOnly": "npm run lint && npm run test && npm run build && node scripts/verify-build.cjs",
+    "prepublishOnly": "npm run lint && npm run test && npm run build && npm run test:package",
     "test": "vitest --run",
+    "test:package": "node scripts/verify-build.cjs",
     "test:watch": "vitest",
     "test:coverage": "vitest --run --coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit",
