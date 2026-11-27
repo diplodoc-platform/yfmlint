@@ -535,6 +535,48 @@ describe('upstream markdownlint integration', () => {
         },
     );
 
+    it.each(['own', 'inherited'] as const)(
+        'isolates metadata exposed by a token getter (%s)',
+        async (kind) => {
+            const metadata = {sourceFile: 'included.md'};
+            const getter = vi.fn(() => metadata);
+            const plugin = (md: MarkdownIt) => {
+                md.core.ruler.push('expose_link_metadata', (state) => {
+                    const inline = state.tokens.find((token) => token.type === 'inline');
+                    const link = inline?.children?.find((token) => token.type === 'link_open');
+                    if (!link) {
+                        throw new Error('Expected a link in the parsed tokens');
+                    }
+
+                    const owner =
+                        kind === 'own' ? link : Object.create(Object.getPrototypeOf(link));
+                    Object.defineProperty(owner, 'meta', {get: getter});
+                    if (kind === 'inherited') {
+                        Reflect.deleteProperty(link, 'meta');
+                        Object.setPrototypeOf(link, owner);
+                    }
+                });
+            };
+            const rule = vi.spyOn(yfm024, 'function');
+
+            const errors = await yfmlint('[Link](target.md)', 'metadata.md', {
+                plugins: [plugin],
+                lintConfig: {default: false, YFM024: LogLevels.ERROR},
+            });
+
+            expect(errors).toEqual([]);
+            const {tokens} = rule.mock.calls[0][0].parsers.markdownit;
+            const inline = tokens.find((token) => token.type === 'inline');
+            const link = inline?.children?.find((token) => token.type === 'link_open');
+            expect(link?.meta).toEqual(metadata);
+            expect(Object.isFrozen(link?.meta)).toBe(true);
+            expect(Object.isFrozen(metadata)).toBe(false);
+            metadata.sourceFile = 'updated.md';
+            expect(link?.meta?.sourceFile).toBe('included.md');
+            expect(getter).toHaveBeenCalledTimes(1);
+        },
+    );
+
     it('retains token descriptors on copied links and their parents', async () => {
         const annotation = Symbol('annotation');
         const unused = vi.fn(() => 'plugin note');
