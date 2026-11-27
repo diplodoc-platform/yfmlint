@@ -1,8 +1,8 @@
-import type MarkdownIt from 'markdown-it';
+import type {MarkdownIt} from 'markdown-it';
 
 import {describe, expect, it} from 'vitest';
 import dedent from 'ts-dedent';
-import anchors from '@diplodoc/transform/lib/plugins/anchors';
+import anchors from '@diplodoc/transform/plugins/anchors';
 
 import {LogLevels, yfmlint} from '../src';
 

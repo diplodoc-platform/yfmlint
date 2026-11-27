@@ -1,5 +1,5 @@
 import type {Rule} from 'markdownlint';
-import type {TokenWithAttrs} from '../typings';
+import type {TokenWithAttrs} from './typings';
 
 export const yfm018: Rule = {
     names: ['YFM018', 'term-definition-from-include'],

@@ -1,4 +1,4 @@
-import type MarkdownIt from 'markdown-it';
+import type {MarkdownIt} from 'markdown-it';
 
 import {describe, expect, it} from 'vitest';
 import dedent from 'ts-dedent';

@@ -4,8 +4,8 @@ exports[`YFM001 > All inline codes are longer than value 1`] = `
 [
   "test2.md: 1: YFM001 / inline-code-length Inline code length [Expected: 5; Actual: 23] [Context: "single-line inline code"]",
   "test2.md: 1: YFM001 / inline-code-length Inline code length [Expected: 5; Actual: 31] [Context: "another single-line inline code"]",
-  "test2.md: 3: YFM001 / inline-code-length Inline code length [Expected: 5; Actual: 24] [Context: "↵multi-line inline code↵"]",
-  "test2.md: 7: YFM001 / inline-code-length Inline code length [Expected: 5; Actual: 32] [Context: "↵another multi-line↵inline code↵"]",
+  "test2.md: 3: YFM001 / inline-code-length Inline code length [Expected: 5; Actual: 24] [Context: " multi-line inline code "]",
+  "test2.md: 7: YFM001 / inline-code-length Inline code length [Expected: 5; Actual: 32] [Context: " another multi-line inline code "]",
 ]
 `;
 
@@ -15,7 +15,7 @@ exports[`YFM001 > Change log level 1`] = `
 [
   "test3.md: 1: YFM001 / inline-code-length Inline code length [Expected: 5; Actual: 23] [Context: "single-line inline code"]",
   "test3.md: 1: YFM001 / inline-code-length Inline code length [Expected: 5; Actual: 31] [Context: "another single-line inline code"]",
-  "test3.md: 3: YFM001 / inline-code-length Inline code length [Expected: 5; Actual: 24] [Context: "↵multi-line inline code↵"]",
-  "test3.md: 7: YFM001 / inline-code-length Inline code length [Expected: 5; Actual: 32] [Context: "↵another multi-line↵inline code↵"]",
+  "test3.md: 3: YFM001 / inline-code-length Inline code length [Expected: 5; Actual: 24] [Context: " multi-line inline code "]",
+  "test3.md: 7: YFM001 / inline-code-length Inline code length [Expected: 5; Actual: 32] [Context: " another multi-line inline code "]",
 ]
 `;

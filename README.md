@@ -23,6 +23,8 @@ YFM (Yandex Flavored Markdown) syntax linter with custom rules for Diplodoc plat
 
 ## Installation
 
+The installed package requires Node.js 22 or later.
+
 ```bash
 npm install @diplodoc/yfmlint
 ```
@@ -49,6 +51,28 @@ if (errors && errors.length > 0) {
   log(errors, console);
 }
 ```
+
+### Markdown attribute parsing
+
+Set `enableMarkdownAttrs` on the top-level lint options to match your renderer:
+
+```typescript
+await yfmlint(content, path, {
+  enableMarkdownAttrs: false,
+  plugins,
+  pluginOptions,
+});
+```
+
+The default remains `true`. The selector applies with absent, empty, or populated
+`plugins`; a value inside `pluginOptions` does not override it. Custom attribute
+delimiters still use `pluginOptions.leftDelimiter` and `rightDelimiter`.
+
+Compatibility note: previously attributes were installed only with a nonempty
+custom plugin list. Default-on parsing now also applies without custom plugins;
+use explicit `false` to retain literal brace text in those calls. This correction
+can change token-dependent diagnostics. Renderer/linter integrations should pass
+the same explicit value rather than rely on different package defaults.
 
 ### With Plugins
 
@@ -90,6 +114,12 @@ const lintConfig = {
   },
 };
 ```
+
+### Standard markdownlint rules
+
+The standard rules follow upstream markdownlint. Projects that enable all standard
+rules may see new diagnostics, including MD059 for link text and MD060 for table
+columns. Multiline diagnostic details and contexts are displayed on one line.
 
 ## Documentation
 

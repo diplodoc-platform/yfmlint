@@ -1,5 +1,6 @@
 import type {Rule} from 'markdownlint';
 
+import {reportBlockDirectives} from './block-directives';
 import {
     CUT_OPEN_RE,
     CUT_STRICT_RE,
@@ -52,6 +53,8 @@ export const yfm020: Rule = {
     tags: ['directives'],
     parser: 'markdownit',
     function: function YFM020(params, onError) {
+        reportBlockDirectives(params, onError, 'YFM020');
+
         const {config} = params;
 
         if (!config) {

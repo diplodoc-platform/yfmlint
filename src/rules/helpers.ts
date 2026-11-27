@@ -1,5 +1,6 @@
 import type {MarkdownItToken, RuleOnError, RuleParams} from 'markdownlint';
-import type {TokenWithAttrs} from '../typings';
+import type {TokenSourceInfo} from '../typings';
+import type {TokenWithAttrs} from './typings';
 
 export interface IncludeChainEntry {
     file: string;
@@ -51,8 +52,31 @@ export function validateLineNumberAndGetFilePath(
     return {lineNumber, filePath};
 }
 
+function validSourceInfo(token?: MarkdownItToken): TokenSourceInfo | undefined {
+    const source: (MarkdownItToken & {sourceInfo?: TokenSourceInfo}) | undefined = token;
+    const info = source?.sourceInfo;
+    if (
+        !info ||
+        typeof info.sourceFile !== 'string' ||
+        !info.sourceFile ||
+        !Array.isArray(info.includeChain) ||
+        !info.includeChain.length ||
+        !info.includeChain.every(
+            (entry) =>
+                entry &&
+                typeof entry.file === 'string' &&
+                entry.file &&
+                Number.isInteger(entry.line) &&
+                entry.line > 0,
+        )
+    ) {
+        return undefined;
+    }
+    return info;
+}
+
 /**
- * Extracts include source metadata from token.meta (set by the includes plugin).
+ * Extracts host source attribution, with legacy token.meta fallback.
  * Returns null if the token is not from included content.
  *
  * @param params - Rule parameters from markdownlint
@@ -67,10 +91,13 @@ export function resolveIncludeSource(
     token?: MarkdownItToken,
     parentToken?: MarkdownItToken,
 ): IncludeSourceInfo | null {
+    const sourceInfo = validSourceInfo(token) || validSourceInfo(parentToken);
     const sourceFile =
+        sourceInfo?.sourceFile ||
         (token as MarkdownItToken & {meta?: TokenMeta})?.meta?.sourceFile ||
         (parentToken as MarkdownItToken & {meta?: TokenMeta})?.meta?.sourceFile;
     const includeChain: IncludeChainEntry[] | undefined =
+        sourceInfo?.includeChain ||
         (token as MarkdownItToken & {meta?: TokenMeta})?.meta?.includeChain ||
         (parentToken as MarkdownItToken & {meta?: TokenMeta})?.meta?.includeChain;
 
@@ -149,11 +176,11 @@ export function findLinksInInlineTokens(
                         if (handler) {
                             handler(linkToken, inline);
                         } else {
-                            const rawLineNumber = link.lineNumber || inline.lineNumber;
+                            const rawLineNumber = linkToken.lineNumber || inline.lineNumber;
                             const includeSource = resolveIncludeSource(
                                 params,
                                 rawLineNumber,
-                                link,
+                                linkToken,
                                 inline,
                             );
 
@@ -167,7 +194,7 @@ export function findLinksInInlineTokens(
                                     rawLineNumber,
                                 );
                                 const context = createContextWithFileInfo(
-                                    link.line || inline.line,
+                                    linkToken.line || inline.line,
                                     filePath,
                                     params.name,
                                 );
@@ -206,11 +233,11 @@ export function findImagesInInlineTokens(
                         if (handler) {
                             handler(imageToken, inline);
                         } else {
-                            const rawLineNumber = image.lineNumber || inline.lineNumber;
+                            const rawLineNumber = imageToken.lineNumber || inline.lineNumber;
                             const includeSource = resolveIncludeSource(
                                 params,
                                 rawLineNumber,
-                                image,
+                                imageToken,
                                 inline,
                             );
 
@@ -224,7 +251,7 @@ export function findImagesInInlineTokens(
                                     rawLineNumber,
                                 );
                                 const context = createContextWithFileInfo(
-                                    image.line || inline.line,
+                                    imageToken.line || inline.line,
                                     filePath,
                                     params.name,
                                 );
@@ -287,7 +314,7 @@ export function getIgnoredLineNumbers(params: RuleParams): Set<number> {
         if ((token.type === 'fence' || token.type === 'code_block') && token.map) {
             const meta = (token as MarkdownItToken & {meta?: TokenMeta}).meta;
 
-            if (meta?.sourceFile) {
+            if (validSourceInfo(token) || meta?.sourceFile) {
                 return;
             }
 

@@ -1,5 +1,5 @@
 import type {Rule} from 'markdownlint';
-import type {TokenWithAttrs} from '../typings';
+import type {TokenWithAttrs} from './typings';
 
 export const yfm007: Rule = {
     names: ['YFM007', 'term-used-without-definition'],
@@ -23,8 +23,8 @@ export const yfm007: Rule = {
                     const termToken = term as unknown as TokenWithAttrs;
                     if (termToken.attrGet('YFM007')) {
                         onError({
-                            lineNumber: term.lineNumber,
-                            context: term.line,
+                            lineNumber: termToken.lineNumber,
+                            context: termToken.line,
                         });
                     }
                 }),

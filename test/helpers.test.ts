@@ -87,7 +87,7 @@ function makeInlineToken(
         lineNumber: opts?.lineNumber || 1,
         line: opts?.line || 'inline content',
         meta: opts?.meta || null,
-    } as MarkdownItToken;
+    } as unknown as MarkdownItToken;
 }
 
 describe('validateLineNumberAndGetFilePath', () => {
@@ -113,6 +113,35 @@ describe('validateLineNumberAndGetFilePath', () => {
     it('falls back to params.name when env.path is absent', () => {
         const params = makeParams({name: 'fallback.md', env: {}});
         expect(validateLineNumberAndGetFilePath(params, 1).filePath).toBe('fallback.md');
+    });
+});
+
+describe('sourceInfo attribution', () => {
+    it('prefers valid host sourceInfo without changing opaque meta', () => {
+        const params = makeParams({lines: ['root', 'include', 'tail']});
+        const meta = Object.freeze(new Date(0));
+        const token = Object.assign(makeToken(null), {
+            meta,
+            sourceInfo: {sourceFile: 'child.md', includeChain: [{file: 'root.md', line: 2}]},
+        });
+        expect(resolveIncludeSource(params, 7, token)).toEqual({
+            lineNumber: 2,
+            sourceFile: 'child.md',
+            sourceLineNumber: 7,
+            includeChain: [{file: 'root.md', line: 2}],
+        });
+        expect(token.meta).toBe(meta);
+    });
+
+    it('falls back to existing metadata when sourceInfo is invalid', () => {
+        const params = makeParams({lines: ['root', 'include']});
+        const token = Object.assign(
+            makeToken({sourceFile: 'old.md', includeChain: [{file: 'root.md', line: 2}]}),
+            {
+                sourceInfo: {sourceFile: 'bad.md', includeChain: [{file: 'root.md', line: 0}]},
+            },
+        );
+        expect(resolveIncludeSource(params, 1, token)?.sourceFile).toBe('old.md');
     });
 });
 
@@ -158,8 +187,7 @@ describe('resolveIncludeSource', () => {
 
         const result = resolveIncludeSource(params, 5, token, parent);
 
-        expect(result).not.toBeNull();
-        expect(result!.sourceFile).toBe('_includes/file.md');
+        expect(result).toMatchObject({sourceFile: '_includes/file.md'});
     });
 
     it('clamps lineNumber from chain to valid range', () => {
@@ -169,7 +197,7 @@ describe('resolveIncludeSource', () => {
 
         const result = resolveIncludeSource(params, 1, token);
 
-        expect(result!.lineNumber).toBe(2);
+        expect(result).toMatchObject({lineNumber: 2});
     });
 
     it('defaults sourceLineNumber to 1 when rawLineNumber is undefined', () => {
@@ -179,7 +207,7 @@ describe('resolveIncludeSource', () => {
 
         const result = resolveIncludeSource(params, undefined, token);
 
-        expect(result!.sourceLineNumber).toBe(1);
+        expect(result).toMatchObject({sourceLineNumber: 1});
     });
 });
 

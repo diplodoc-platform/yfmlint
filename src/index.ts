@@ -1,34 +1,43 @@
-import type {BaseLintError, LintError, MarkdownItPlugin, Options} from './typings';
+import type {Configuration} from 'markdownlint';
+import type {LintConfig, LintError, Options} from './typings';
 
+import MarkdownIt from 'markdown-it';
 import attrs from 'markdown-it-attrs';
 
 import defaultLintConfig from './config';
+import {prepareFrontMatter, preserveFrontMatterTitles, protectPluginMetadata} from './markdownlint';
 import * as rules from './rules';
+import {captureBlockDirectives} from './rules/block-directives';
 import {getLogLevel, normalizeConfig} from './utils';
 
-export type {LintConfig, RawLintConfig} from './typings';
+export type {LintConfig, RawLintConfig, TokenSourceInfo} from './typings';
 
 export {LogLevels, log, getLogLevel, normalizeConfig} from './utils';
+
+function skipInlineHtmlRule(config: LintConfig): Configuration {
+    const md033 = config.MD033;
+    if (!md033 || Object.keys(md033).some((key) => key !== 'loglevel')) {
+        return config;
+    }
+
+    // Leave alias and tag precedence to markdownlint for non-canonical configurations.
+    const hasOverride = Object.keys(config).some(
+        (key) => key !== 'MD033' && /^(?:MD033|no-inline-html|html)$/i.test(key),
+    );
+
+    return hasOverride ? config : {...config, MD033: false};
+}
 
 export async function yfmlint(
     content: string,
     path: string,
     opts: Options,
 ): Promise<LintError[] | undefined> {
-    // Dynamic import is needed because markdownlint/promise is ESM
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const {lint} = (await import('markdownlint/promise')) as {
-        lint: (options: {
-            strings: Record<string, string>;
-            markdownItPlugins?: Array<[MarkdownItPlugin, Record<string, unknown>]>;
-            handleRuleFailures?: boolean;
-            frontMatter?: RegExp | null;
-            config?: unknown;
-            customRules?: unknown[];
-        }) => Promise<Record<string, BaseLintError[]>>;
-    };
+    // The engine is ESM; retain the CommonJS package entry point.
+    const {lint} = await import('markdownlint/promise');
     const {
         plugins: customPlugins = [],
+        enableMarkdownAttrs = true,
         pluginOptions = {},
         frontMatter = null,
         trimPageConstructor = true,
@@ -62,46 +71,70 @@ export async function yfmlint(
     pluginOptions.isLintRun = true;
 
     const config = normalizeConfig(defaultLintConfig, lintConfig);
-    // Add markdown-it-attrs plugin by default to support attribute syntax in markdown
-    // Custom plugins are added after attrs plugin
-    const plugins =
-        (customPlugins && customPlugins.length && [attrs, ...customPlugins]) || undefined;
-    // markdownlint expects plugins in format: [plugin, options]
-    // This allows passing pluginOptions to all plugins
-    const preparedPlugins: Array<[MarkdownItPlugin, Record<string, unknown>]> | undefined =
-        plugins &&
-        plugins.map(
-            (plugin) => [plugin, pluginOptions] as [MarkdownItPlugin, Record<string, unknown>],
-        );
+    // Attribute parsing is independent of whether callers install other plugins.
+    const plugins = [
+        captureBlockDirectives,
+        ...(enableMarkdownAttrs ? [attrs] : []),
+        ...(customPlugins || []),
+    ];
+    const markdownItFactory = () => {
+        const md = new MarkdownIt({html: true});
+        md.linkify.set({fuzzyLink: true, urlAuth: true});
+        for (const plugin of plugins) {
+            md.use(plugin, pluginOptions);
+        }
+
+        protectPluginMetadata(md);
+
+        return md;
+    };
+    const input = prepareFrontMatter(content, frontMatter);
+    const {originalHeaderLines} = input;
+    // MD033 uses micromark to check inline HTML. Without an opening bracket the
+    // default rule cannot report an error, and there are no inline directives.
+    const plainContent = !input.content.includes('<');
+    const lintConfigForInput = plainContent ? skipInlineHtmlRule(config) : config;
 
     const errors = await lint({
-        strings: {[path]: content},
-        markdownItPlugins: preparedPlugins,
+        strings: {[path]: input.content},
+        markdownItFactory,
+        noInlineConfig: plainContent,
         // Continue processing even if a rule throws an error
         // This prevents one failing rule from stopping the entire lint process
         handleRuleFailures: true,
-        frontMatter,
-        config,
+        frontMatter: input.frontMatter,
+        config: originalHeaderLines
+            ? preserveFrontMatterTitles(lintConfigForInput, originalHeaderLines)
+            : lintConfigForInput,
+        configParsers: originalHeaderLines
+            ? [
+                  (text) =>
+                      preserveFrontMatterTitles(
+                          JSON.parse(text) as Configuration,
+                          originalHeaderLines,
+                      ),
+              ]
+            : undefined,
         customRules: Object.values(rules),
     });
 
-    return errors[path].map((error) => {
-        (error as LintError).level = getLogLevel(config, error.ruleNames);
-        // Override toString() to provide custom error formatting
-        // Format: "path:line: ruleName description [detail] [Context: ...]"
+    // The previous MD025 accepted a document title only on the first Markdown line or in YAML.
+    const startsWithBlankOrComment = /^\uFEFF?[ \t]*(?:[\r\n]|<!--|$)/.test(input.content);
+    const diagnostics =
+        input.frontMatter === null && startsWithBlankOrComment
+            ? errors[path].filter(({ruleNames, errorDetail}) => {
+                  return ruleNames[0] !== 'MD025' || errorDetail !== null;
+              })
+            : errors[path];
+
+    return diagnostics.map(({severity: _severity, ...diagnostic}) => {
+        const level = getLogLevel(config, diagnostic.ruleNames);
+        const error = {...diagnostic, level} as LintError;
+
+        // Keep the package's configured level and diagnostic text format.
         error.toString = function () {
-            const {
-                lineNumber,
-                errorDetail,
-                errorContext,
-                ruleNames,
-                // @ts-expect-error bad markdownlint typings
-                ruleName,
-                // @ts-expect-error bad markdownlint typings
-                ruleAlias,
-                ruleDescription,
-            } = error;
-            const ruleMoniker = ruleNames ? ruleNames.join(' / ') : ruleName + ' / ' + ruleAlias;
+            const {lineNumber, errorDetail, errorContext, ruleNames, ruleDescription} = error;
+            const ruleMoniker = ruleNames.join(' / ');
 
             return (
                 `${path}${lineNumber ? `: ${lineNumber}:` : ':'} ${ruleMoniker} ${ruleDescription}` +
@@ -110,6 +143,6 @@ export async function yfmlint(
             );
         };
 
-        return error as LintError;
+        return error;
     });
 }
